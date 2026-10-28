@@ -4,7 +4,8 @@ import { itemsFor, type Lang } from '../content/sets';
 import { wordFor } from '../content/words';
 
 /**
- * A fixed line with a bundled Kokoro clip at public/voice/<id>.mp3 (see scripts/voices).
+ * A fixed line with a bundled Kokoro clip at public/voice/<id>.mp3 (see scripts/voices). The id ends with a
+ * fingerprint of the words, so changing a line simply waits for its new clip (device voice meanwhile).
  * `text` goes through Kokoro's own pronunciation rules; `phonemes` are spoken exactly.
  */
 export interface VoiceLine {
@@ -22,25 +23,32 @@ export type Segment =
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+/** Short fingerprint of the words, so a reworded line never plays an old clip (FNV-1a). */
+function fingerprint(s: string): string {
+  let h = 0x811c9dc5;
+  for (const ch of s) h = Math.imul(h ^ ch.codePointAt(0)!, 0x01000193) >>> 0;
+  return h.toString(36).padStart(7, '0');
+}
+const voiceId = (lang: Lang, base: string, words: string) => `${lang}/${base}-${fingerprint(words)}`;
+
 /** One spoken line, written twice: plain text for the device voice, and markup for the Kokoro clip. */
 function line(lang: Lang, id: string, build: (name: (item: string) => string, short: (item: string) => string) => string): Segment {
   const text = build((x) => spokenName(x, lang), (x) => shortName(x, lang));
   const voiceText = build((x) => voiceName(x, lang), (x) => voiceShort(x, lang));
-  return { kind: 'say', text, lang, voice: { id: `${lang}/${id}`, lang, text: voiceText } };
+  return { kind: 'say', text, lang, voice: { id: voiceId(lang, id, voiceText), lang, text: voiceText } };
 }
 
 function sound(item: string, lang: Lang): Segment {
   const phonic = phonicFor(item, lang);
   return {
     kind: 'clip', key: recordingKey(item, lang), fallback: phonic?.approx ?? '', lang,
-    voice: phonic?.ps ? { id: `${lang}/sound-${letterSlug(item)}`, lang, phonemes: phonic.ps } : undefined,
+    voice: phonic?.ps ? { id: voiceId(lang, `sound-${letterSlug(item)}`, phonic.ps), lang, phonemes: phonic.ps } : undefined,
   };
 }
 
 /**
- * "Sound it out": name → phonics sound twice → picture word.
- *   en: "C! C says /k/, /k/. C is for Cat!"
- *   es: "¡Ce! La ce suena /k/, /k/. ¡Ce de Conejo!"
+ * What's said when a letter or number appears: one smooth sentence, a single clip.
+ *   en: "C! C is for Cat."   es: "¡Ce! Ce de Conejo."
  * Numbers count instead: "Three! Let's count: one, two, three!"
  */
 export function introSequence(item: string, lang: Lang): Segment[] {
@@ -53,29 +61,24 @@ export function introSequence(item: string, lang: Lang): Segment[] {
       return lang === 'es' ? `¡${cap(name(item))}! Vamos a contar: ${counting}. ¡${cap(name(item))}!` : `${cap(name(item))}! Let's count: ${counting}. ${cap(name(item))}!`;
     })];
   }
-
   const word = wordFor(item, lang);
-  const wordId = `word-${letterSlug(item)}`;
-
   if (lang === 'es') {
-    if (isSilent(item, lang)) {
-      return [line(lang, `intro-${id}`, (name, short) => `¡${cap(name(item))}! La hache no suena. ¡Shhh! ${cap(short(item))} de ${word[0]}.`)];
-    }
-    return [
-      line(lang, `intro-${id}`, (name, short) => `¡${cap(name(item))}! La ${short(item)} suena`),
-      sound(item, lang), sound(item, lang),
-      line(lang, wordId, (_, short) => `¡${cap(short(item))} de ${word[0]}!`),
-    ];
+    return [line(lang, `intro-${id}`, (name, short) => `¡${cap(name(item))}! ${cap(short(item))} de ${word[0]}.`)];
   }
-  // Ñ in English mode: explain it's a Spanish letter.
-  if (item.toUpperCase() === 'Ñ') {
-    return [line(lang, `intro-${id}`, (name, short) => `${cap(name(item))}! In Spanish, ${short(item)} says`), sound(item, lang), sound(item, lang)];
-  }
-  return [
-    line(lang, `intro-${id}`, (name, short) => `${cap(name(item))}! ${cap(short(item))} says`),
-    sound(item, lang), sound(item, lang),
-    line(lang, wordId, (_, short) => `${cap(short(item))} is for ${word[0]}!`),
-  ];
+  // Ñ in English mode: there's no English picture word.
+  if (item.toUpperCase() === 'Ñ') return [line(lang, `intro-${id}`, (name, short) => `${cap(name(item))}! ${cap(short(item))} is a Spanish letter.`)];
+  return [line(lang, `intro-${id}`, (name, short) => `${cap(name(item))}! ${cap(short(item))} is for ${word[0]}.`)];
+}
+
+/**
+ * The "Letter sound" button: "C says… /k/ … /k/" / "La ce suena… /k/ … /k/".
+ * Spanish H explains that it's silent.
+ */
+export function soundSequence(item: string, lang: Lang): Segment[] {
+  if (isNumber(item)) return introSequence(item, lang);
+  if (isSilent(item, lang)) return [line(lang, `says-${letterSlug(item)}`, () => 'La hache no suena. ¡Shhh!')];
+  const lead = line(lang, `says-${letterSlug(item)}`, (_, short) => (lang === 'es' ? `La ${short(item)} suena` : `${cap(short(item))} says`));
+  return [lead, sound(item, lang), sound(item, lang)];
 }
 
 /** The short spoken prompt after a wrong answer: "Find C!" / "¡Busca la ce!" */
@@ -106,7 +109,7 @@ export function allVoiceLines(): VoiceLine[] {
     // The Spanish sets are a superset (they add Ñ), and "Both" mode uses them with the English voice too.
     const items = [...itemsFor('upper', 'es'), ...itemsFor('lower', 'es'), ...itemsFor('numbers', 'es')];
     for (const item of items) {
-      for (const seg of [...introSequence(item, lang), ...findPrompt(item, lang), ...drawPrompt(item, lang), ...nameLine(item, lang)]) {
+      for (const seg of [...introSequence(item, lang), ...soundSequence(item, lang), ...findPrompt(item, lang), ...drawPrompt(item, lang), ...nameLine(item, lang)]) {
         if (!seg.voice) continue;
         const prev = out.get(seg.voice.id);
         if (prev && JSON.stringify(prev) !== JSON.stringify(seg.voice)) throw new Error(`Voice line ${seg.voice.id} has two different texts`);

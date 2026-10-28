@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { deleteRecording, hasRecording, loadRecordingKeys, playClip, saveRecording } from '../../audio/recordings';
-import { introSequence, playSequence } from '../../audio/sayLetter';
+import { playSequence, soundSequence } from '../../audio/sayLetter';
 import { trimToWav } from '../../audio/trim';
 import { PHONICS, recordingKey } from '../../content/phonics';
 import { itemsFor, type Lang } from '../../content/sets';
@@ -104,7 +104,7 @@ export function RecordSounds() {
           </>}
           {!draft && hasRecording(key) && <>
             <button className="btn small" onClick={() => void playClip(key)}>▶ Saved sound</button>
-            <button className="btn small" onClick={() => void playSequence(introSequence(letter, lang))}>🔊 Hear in game</button>
+            <button className="btn small" onClick={() => void playSequence(soundSequence(letter, lang))}>🔊 Hear in game</button>
             <button className="btn small" onClick={() => void deleteRecording(key).then(() => setVersion((v) => v + 1))}>Delete</button>
           </>}
         </div>

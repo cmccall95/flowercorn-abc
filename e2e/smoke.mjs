@@ -31,6 +31,8 @@ const errors = [];
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 page.on('pageerror', (e) => errors.push(e.message));
 await page.addInitScript(stubSpeech);
+// Laptop run: no bundled clips, so every line goes through the (stubbed) device voice and can be checked as text.
+await page.route('**/voice/index.json', (r) => r.fulfill({ json: {} }));
 await page.goto(BASE);
 await page.screenshot({ path: `${OUT}/01-welcome-empty.png` });
 await page.getByRole('button', { name: /New player/ }).click();
@@ -44,7 +46,7 @@ check((await spoken(page)).some((s) => s.includes('Hi, Lily!')), 'greets her by 
 await page.getByRole('button', { name: /^ABC .*Find/ }).click();
 await page.waitForTimeout(700);
 await page.screenshot({ path: `${OUT}/04-find-keyboard-start.png` });
-check((await spoken(page)).some((s) => s.includes('Ey! Ey says')), 'sounds out A: name then phonics');
+check((await spoken(page)).some((s) => s.includes('Ey! Ey is for Apple.')), 'introduces A in one smooth line');
 
 await page.keyboard.press('b');
 await page.waitForTimeout(400);
@@ -59,7 +61,10 @@ check((await spoken(page)).some((s) => /Lily/.test(s)) && (await spoken(page)).s
 await page.getByRole('button', { name: /Español/ }).click();
 await page.waitForTimeout(300);
 const es = (await spoken(page)).filter((s) => s.startsWith('es-MX'));
-check(es.some((s) => / suena$/.test(s)), 'Español button sounds it out in Spanish');
+check(es.some((s) => / de \w+\.$/.test(s)), 'Español button says it in Spanish');
+await page.getByRole('button', { name: /Letter sound/ }).click();
+await page.waitForTimeout(1500);
+check((await spoken(page)).some((s) => / says$/.test(s)), 'Letter sound button plays the phonics sound');
 
 for (const k of ['b', 'c', 'd']) { await page.waitForTimeout(1800); await page.keyboard.press(k); }
 await page.waitForTimeout(1800);
@@ -128,6 +133,9 @@ await page.screenshot({ path: `${OUT}/14-record.png`, fullPage: true });
 const tab = await browser.newPage({ viewport: { width: 820, height: 1180 }, hasTouch: true, isMobile: true });
 tab.on('pageerror', (e) => errors.push(e.message));
 await tab.addInitScript(stubSpeech);
+// Tablet run: real bundled clips.
+const clips = [];
+tab.on('request', (r) => { if (r.url().includes('/voice/') && r.url().endsWith('.mp3')) clips.push(r.url()); });
 await tab.goto(BASE);
 await tab.getByRole('button', { name: 'Español', exact: true }).click();
 await tab.getByRole('button', { name: /Nuevo jugador/ }).tap();
@@ -137,7 +145,7 @@ await tab.getByRole('button', { name: /^123 .*Busca/ }).tap();
 await tab.waitForTimeout(600);
 await tab.screenshot({ path: `${OUT}/15-tablet-numbers-es.png` });
 check(await tab.locator('.choice').count() === 3, 'tablet shows 3 bubbles at level 1');
-check((await spoken(tab)).some((s) => s.includes('¡Cero!')), 'numbers start at zero in Spanish');
+check(clips.some((u) => u.includes('/voice/es/intro-n0-')) || (await spoken(tab)).some((s) => s.includes('¡Cero!')), 'numbers start at zero in Spanish (bundled clip or device voice)');
 await tab.locator('.choice', { hasText: /^0$/ }).tap({ force: true });
 await tab.waitForTimeout(400);
 check((await spoken(tab)).some((s) => s.includes('Lily') && s.startsWith('es-MX')), 'Spanish cheer with her name');

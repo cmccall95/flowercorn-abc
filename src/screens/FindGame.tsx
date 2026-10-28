@@ -1,6 +1,6 @@
 import { motion, useAnimationControls } from 'framer-motion';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { findPrompt, introSequence, nameLine, playSequence } from '../audio/sayLetter';
+import { findPrompt, introSequence, nameLine, playSequence, soundSequence } from '../audio/sayLetter';
 import { sfx } from '../audio/sfx';
 import { burst, CheerBubble } from '../components/Celebration';
 import { Emoji } from '../components/Emoji';
@@ -9,7 +9,6 @@ import { StickerReveal } from '../components/StickerReveal';
 import { cheer } from '../content/cheers';
 import { FRIENDS } from '../content/friends';
 import { isNumber } from '../content/names';
-import { isSilent, phonicFor } from '../content/phonics';
 import { type ActivityId, itemsFor, type Lang } from '../content/sets';
 import { GOLD_STICKERS, pickSticker, STICKER_EVERY, type Sticker } from '../content/stickers';
 import { COUNT_THINGS, wordFor } from '../content/words';
@@ -95,6 +94,11 @@ export function FindGame({ activity, go }: { activity: ActivityId; go: Go }) {
     if (!round) return;
     replays.current++;
     void playSequence(introSequence(round.target, lang ?? round.lang));
+  };
+  const playSound = () => {
+    if (!round) return;
+    replays.current++;
+    void playSequence(soundSequence(round.target, round.lang));
   };
 
   const finishSet = (): Sticker | null => {
@@ -220,6 +224,7 @@ export function FindGame({ activity, go }: { activity: ActivityId; go: Go }) {
         <div className="hear">
           <button className="btn" onClick={() => replay('en')}><Emoji e="🔊" /> {t('hearEnglish')}</button>
           <button className="btn" onClick={() => replay('es')}><Emoji e="🔊" /> {t('hearSpanish')}</button>
+          {!isNumber(round.target) && <button className="btn" onClick={playSound}><Emoji e="🔤" /> {t('letterSound')}</button>}
         </div>
       </div>
 
@@ -258,12 +263,7 @@ function bubbleText(item: string, lang: Lang) {
     return lang === 'es' ? <>¡Cuenta hasta <em>{item}</em>!</> : <>Let's count to <em>{item}</em>!</>;
   }
   const word = wordFor(item, lang);
-  const ph = phonicFor(item, lang);
-  const L = item;
-  if (lang === 'es') {
-    if (isSilent(item, lang)) return <>La {L} no suena <Emoji e="🤫" />. {L} de <em>{word[0]}</em> <Emoji e={word[1]} /></>;
-    return <>{L} suena <em>{ph?.ipa}</em>. {L} de <em>{word[0]}</em> <Emoji e={word[1]} /></>;
-  }
-  if (!word || item.toUpperCase() === 'Ñ') return <>{L} says <em>{ph?.ipa}</em> in Spanish</>;
-  return <>{L} says <em>{ph?.ipa}</em>. {L} is for <em>{word[0]}</em> <Emoji e={word[1]} /></>;
+  if (lang === 'es') return <>{item} de <em>{word[0]}</em> <Emoji e={word[1]} /></>;
+  if (item.toUpperCase() === 'Ñ') return <>{item} is a <em>Spanish</em> letter</>;
+  return <>{item} is for <em>{word[0]}</em> <Emoji e={word[1]} /></>;
 }

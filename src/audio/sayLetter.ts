@@ -5,8 +5,10 @@ import { playClip } from './recordings';
 import { cancelSpeech, currentGeneration, speakLine } from './speech';
 import { playVoice } from './voiceClips';
 
-export { drawPrompt, findPrompt, introSequence, nameLine, sequenceText } from './lines';
+export { drawPrompt, findPrompt, introSequence, nameLine, sequenceText, soundSequence } from './lines';
 export type { Segment } from './lines';
+
+const PAUSE_MS = 350;
 
 /** Stop speech and any clip that's playing. */
 export function hush() {
@@ -27,7 +29,9 @@ export function say(text: string, lang: Lang): Promise<void> {
 export async function playSequence(segments: Segment[]): Promise<void> {
   hush();
   const gen = currentGeneration();
-  for (const seg of segments) {
+  for (const [i, seg] of segments.entries()) {
+    // A short breath between pieces so joined clips don't run together.
+    if (i > 0) await new Promise((r) => setTimeout(r, PAUSE_MS));
     if (currentGeneration() !== gen) return;
     if (seg.kind === 'say') {
       if (!(seg.voice && (await playVoice(seg.voice.id)))) await speakLine(seg.text, seg.lang);
