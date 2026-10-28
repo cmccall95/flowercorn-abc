@@ -22,10 +22,11 @@ export function Home({ go }: { go: Go }) {
   const lang = uiLang(settings.lang);
   const level = (a: ActivityId) => progress?.[`${a}:${setLang}`]?.level ?? 1;
 
+  // Switch screens first (switching stops whatever is being said). Games announce themselves; the book doesn't.
   const open = (screen: Screen, spoken: SpokenKey) => {
     sfx.pop();
-    void playSequence(phrase(SPOKEN[lang][spoken], lang));
     go(screen);
+    if (screen.id === 'book') void playSequence(phrase(SPOKEN[lang][spoken], lang));
   };
   const key = (verb: 'find' | 'trace', a: ActivityId) =>
     `${verb}${a === 'upper' ? 'Upper' : a === 'lower' ? 'Lower' : 'Numbers'}` as SpokenKey;

@@ -28,32 +28,27 @@ export function SoundCheck() {
         <Emoji e={icon(h.deviceVoice)} />
         <div>
           <b>This device's voice</b>{' '}
-          {en + es === 0 ? 'none installed in this browser' : h.deviceVoice === 'ok' ? 'working' : h.deviceVoice === 'failed' ? `not responding (${h.deviceError})` : 'not tested yet'}
+          {h.deviceVoice === 'ok' ? 'working' : h.deviceVoice === 'failed' ? `not available (${h.deviceError})` : en + es === 0 ? 'no voices listed (tap Test to try)' : 'not tested yet'}
           {en + es > 0 && <> · {en} English, {es} Spanish voices</>}
           <div className="muted">
-            {en + es === 0 ? (
-              <>That's OK: everything the game says has its own clip. To hear her name in the cheers, record it in
-                Players → Record name. (On Samsung phones you can also add voices: phone Settings → General management →
-                Text-to-speech output → Preferred engine → Speech Services by Google, then reload.)</>
-            ) : (
-              <>Only used to say her name in cheers when it isn't recorded. If it's not responding: check the tab isn't muted, pick a
-                voice below without “Google” in its name (those need the internet), or reload the page.</>
-            )}
+            Only needed to say her name in cheers when it isn't recorded; everything else has its own clip. Chrome on many
+            Samsung phones doesn't offer its voices to websites even when they're set up, so the easy fix is
+            Players → Record name.
           </div>
         </div>
-        <button className="btn small" disabled={en + es === 0} onClick={() => void say('Testing, one, two, three!', 'en')}>🔊 Test</button>
+        <button className="btn small" onClick={() => void say('Testing, one, two, three!', 'en')}>🔊 Test</button>
       </div>
     </div>
   );
 }
 
-/** Small on-screen note while playing, shown only when the device voice has stopped responding. */
+/** Small on-screen note while playing, shown only if the game's voice clips couldn't load. */
 export function SoundWarning() {
-  const failed = useAudioHealth((s) => s.deviceVoice === 'failed');
+  const failed = useAudioHealth((s) => s.clips === 'failed');
   if (!failed) return null;
   return (
     <div className="sound-warning" role="status">
-      🔇 The voice isn't responding. Grown-ups: Settings → Sound check
+      🔇 The voice clips didn't load. Grown-ups: check the internet, then Settings → Sound check
     </div>
   );
 }

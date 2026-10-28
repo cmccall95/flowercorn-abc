@@ -11,7 +11,12 @@ on:
       - src/content/phonics.ts
       - src/content/words.ts
       - src/content/sets.ts
-      - scripts/voices/**
+      - src/content/phrases.ts
+      - src/content/cheers.ts
+      - src/content/stickers.ts
+      - scripts/voices/*.py
+      - scripts/voices/*.ts
+      - scripts/voices/requirements.txt
 
 permissions:
   contents: write
@@ -31,7 +36,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx vite-node scripts/voices/manifest.ts > scripts/voices/manifest.json
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -42,16 +46,24 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.cache/huggingface
-          key: kokoro-82m-v1
+          key: kokoro-82m-whisper-small-v1
+      # 1. Listen to several spellings of each letter name and keep the one Whisper hears correctly.
+      - run: python scripts/voices/letters.py src/content/letterVoice.gen.json scripts/voices/letters-report.md
+      # 2. List every line the game says, using those spellings.
+      - run: npx vite-node scripts/voices/manifest.ts > scripts/voices/manifest.json
+      # 3. Make the clips that are new or changed.
       - run: python scripts/voices/generate.py scripts/voices/manifest.json public/voice
+      # 4. Listen to every letter clip and report any that don't name their letter.
+      - run: python scripts/voices/verify.py scripts/voices/manifest.json public/voice scripts/voices/report.md
+      - run: cat scripts/voices/letters-report.md scripts/voices/report.md >> "$GITHUB_STEP_SUMMARY"
       - name: Commit clips
         id: commit
         run: |
-          git add public/voice
+          git add public/voice src/content/letterVoice.gen.json scripts/voices/letters-report.md scripts/voices/report.md
           if git diff --cached --quiet; then echo "changed=false" >> "$GITHUB_OUTPUT"; exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Update voice clips"
+          git commit -m "Update voice clips" -m "$(head -c 3000 scripts/voices/report.md)"
           git push
           echo "changed=true" >> "$GITHUB_OUTPUT"
       - name: Redeploy with the new clips

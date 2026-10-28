@@ -3,6 +3,15 @@
 Versions are MAJOR.MINOR.PATCH. The version you're running is shown on the first screen and in the
 Grown-up corner, which also says whether a newer one is out.
 
+## [0.8.0] - 2026-10-28
+### Fixed
+- Letter names are checked by listening: for each letter several spellings are tried ("Ay", "A", …), a speech
+  recognizer (Whisper) listens to each, and the one heard as the right letter is used in every clip. Every finished
+  letter clip is listened to again and any miss is reported.
+- Cheers and other lines always use the game's own clips; the phone's voice is only tried for her name when it
+  isn't recorded, so phones that hide their voices (many Samsung phones) no longer cause silence or delays.
+- The "voice isn't responding" banner no longer shows during play; it only appears if the clips can't load.
+
 ## [0.7.0] - 2026-10-28
 ### Added
 - Works on phones with no built-in voice (many Samsung phones): greetings, cheers, sticker announcements and

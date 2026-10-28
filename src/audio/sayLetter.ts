@@ -2,7 +2,7 @@ import type { Lang } from '../content/sets';
 import type { Segment } from './lines';
 import { stopAudio } from './player';
 import { hasRecording, playClip } from './recordings';
-import { cancelSpeech, currentGeneration, deviceVoiceUsable, speakLine } from './speech';
+import { cancelSpeech, currentGeneration, deviceVoiceMaybe, speakLine } from './speech';
 import { playVoice } from './voiceClips';
 
 export { drawPrompt, findPrompt, introSequence, nameLine, phrase, sequenceText, soundSequence } from './lines';
@@ -19,7 +19,7 @@ export function hush() {
 }
 
 /** Say one line on the device voice right now, cutting off anything playing. */
-export function say(text: string, lang: Lang): Promise<void> {
+export function say(text: string, lang: Lang): Promise<boolean> {
   hush();
   return speakLine(text, lang);
 }
@@ -37,14 +37,15 @@ export async function playSequence(segments: Segment[]): Promise<void> {
     if (i > 0) await wait(seg.pause ?? PAUSE_MS);
     if (currentGeneration() !== gen) return;
     if (seg.kind === 'phrase') {
-      // Her recorded name, when there is one, keeps every voice the same; otherwise the device voice can say it.
-      const recordedName = seg.parts.some((p) => 'nameKey' in p && hasRecording(p.nameKey));
-      if (!recordedName && deviceVoiceUsable(seg.lang)) { await speakLine(seg.text, seg.lang); continue; }
+      // Clips for the words; her name from a grown-up's recording, else the device voice if it can talk.
       for (const [j, part] of seg.parts.entries()) {
         if (j > 0) await wait(NAME_GAP_MS);
         if (currentGeneration() !== gen) return;
-        if ('voice' in part) await playVoice(part.voice.id);
-        else await playClip(part.nameKey);
+        if ('voice' in part) {
+          if (!(await playVoice(part.voice.id)) && deviceVoiceMaybe()) await speakLine(part.voice.text ?? '', seg.lang);
+        } else if (!(hasRecording(part.nameKey) && (await playClip(part.nameKey))) && deviceVoiceMaybe()) {
+          await speakLine(part.spoken, seg.lang);
+        }
       }
     } else if (seg.kind === 'say') {
       if (!(seg.voice && (await playVoice(seg.voice.id)))) await speakLine(seg.text, seg.lang);

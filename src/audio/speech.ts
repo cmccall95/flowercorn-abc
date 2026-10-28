@@ -53,13 +53,13 @@ const START_TIMEOUT_MS = 2500;
  * get stuck, especially with Google's online voices, so: if a line errors or doesn't start, it's retried once
  * with a voice that lives on the device, and the result is reported to the Sound check.
  */
-export function speakLine(text: string, lang: Lang): Promise<void> {
-  if (!supported() || !text.trim()) return Promise.resolve();
+export function speakLine(text: string, lang: Lang): Promise<boolean> {
+  if (!supported() || !text.trim()) return Promise.resolve(false);
   const chosen = pickVoice(lang, lang === 'es' ? settings.voiceEs : settings.voiceEn);
   return attempt(text, lang, chosen).then((ok) => {
-    if (ok || !chosen || chosen.localService) return;
+    if (ok || !chosen || chosen.localService) return ok;
     const local = voicesFor(lang).find((v) => v.localService);
-    if (local) return attempt(text, lang, local).then(() => undefined);
+    return local ? attempt(text, lang, local) : false;
   });
 }
 
@@ -96,18 +96,28 @@ function attempt(text: string, lang: Lang, voice: SpeechSynthesisVoice | null): 
 }
 
 /** Cut off whatever is playing and say this instead. */
-export function speak(text: string, lang: Lang): Promise<void> {
+export function speak(text: string, lang: Lang): Promise<boolean> {
   cancelSpeech();
   return speakLine(text, lang);
 }
 
-/** iPad and iPhone only allow speech after a tap; saying a silent word inside the first tap unlocks it. */
+/**
+ * Call inside the first tap. Says a silent word, which unlocks speech on iPad/iPhone and tells us early whether
+ * this device can speak at all (so nothing later waits on a voice that never answers).
+ */
 export function unlockSpeech() {
-  if (!supported() || !/iPad|iPhone|iPod/.test(navigator.userAgent) && !(navigator.maxTouchPoints > 1 && /Mac/.test(navigator.userAgent))) return;
+  if (!supported()) { reportHealth({ deviceVoice: 'failed', deviceError: 'not supported' }); return; }
+  if (useAudioHealth.getState().deviceVoice !== 'unknown') return;
   const u = new SpeechSynthesisUtterance('hi');
   u.volume = 0;
+  const timer = setTimeout(() => reportHealth({ deviceVoice: 'failed', deviceError: 'did not start' }), START_TIMEOUT_MS);
+  u.onstart = () => { clearTimeout(timer); reportHealth({ deviceVoice: 'ok', deviceError: '' }); };
+  u.onerror = (e) => { clearTimeout(timer); reportHealth({ deviceVoice: 'failed', deviceError: e.error }); };
   speechSynthesis.speak(u);
 }
 
-/** Whether lines with the child's name can use the device voice (many Samsung phones have no voices at all). */
-export const deviceVoiceUsable = (lang: Lang) => voicesFor(lang).length > 0 && useAudioHealth.getState().deviceVoice !== 'failed';
+/**
+ * Whether it's worth asking the device voice to say something. Chrome on many Samsung phones lists no voices but
+ * may still speak, so only a real failure rules it out.
+ */
+export const deviceVoiceMaybe = () => useAudioHealth.getState().deviceVoice !== 'failed';

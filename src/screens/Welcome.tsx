@@ -25,8 +25,9 @@ export function Welcome({ go }: { go: Go }) {
     useApp.getState().selectProfile(id);
     const p = useApp.getState().profiles.find((x) => x.id === id)!;
     const l = uiLang(lang);
-    void playSequence(phrase(SPOKEN[l].greet, l, {}, whoOf(p)));
+    // Switch screens first: switching stops whatever is being said.
     go({ id: 'home' });
+    void playSequence(phrase(SPOKEN[l].greet, l, {}, whoOf(p)));
   };
 
   const setLang = (l: LangMode) => {

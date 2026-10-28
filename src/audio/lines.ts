@@ -24,7 +24,7 @@ export interface NameRef {
   profileId: string;
 }
 
-export type PhrasePart = { voice: VoiceLine } | { nameKey: string };
+export type PhrasePart = { voice: VoiceLine } | { nameKey: string; spoken: string };
 
 /** Every segment can ask for a longer pause before it (milliseconds). */
 export type Segment = (
@@ -33,8 +33,8 @@ export type Segment = (
   /** A phonics sound: a grown-up's recording, else the bundled clip, else `fallback` on the device voice. */
   | { kind: 'clip'; key: string; fallback: string; lang: Lang; voice?: VoiceLine }
   /**
-   * A line with the child's name. Devices with a working voice say `text` with her name in it; devices without
-   * one (many Samsung phones) play the bundled clips around her recorded name.
+   * A line that may include the child's name: bundled clips, with her recorded name slotted in (or the device
+   * voice saying it, where there is one). `text` is the whole line, for captions and as a last resort.
    */
   | { kind: 'phrase'; text: string; lang: Lang; parts: PhrasePart[] }
 ) & { pause?: number };
@@ -139,7 +139,7 @@ export function phrase(template: string, lang: Lang, vars: Record<string, string
   const fill = (s: string, name: string) => s.replace(/\{(\w+)\}/g, (_, k: string) => (k === 'n' ? name : vars[k] ?? ''));
   const parts: PhrasePart[] = [];
   template.split('{n}').forEach((piece, i) => {
-    if (i > 0 && who) parts.push({ nameKey: nameRecordingKey(who.profileId) });
+    if (i > 0 && who) parts.push({ nameKey: nameRecordingKey(who.profileId), spoken: who.spoken });
     const words = tidy(fill(piece, ''), lang, i > 0);
     if (words) parts.push({ voice: { id: voiceId(lang, 'p', words), lang, text: words } });
   });

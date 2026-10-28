@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { voiceShort } from '../content/names';
 import { allVoiceLines, drawPrompt, findPrompt, introSequence, nameLine, phrase, type Segment, sequenceText, soundSequence } from './lines';
 
 const voiceOf = (seg: Segment) => (seg.kind === 'phrase' ? undefined : seg.voice);
@@ -22,12 +23,12 @@ describe('introSequence', () => {
     expect(sequenceText(introSequence('b', 'es'))).toBe('Be minúscula. Be de Ballena.');
   });
 
-  it('gives the bundled voice exact phonemes for English letter names', () => {
+  it('names letters in clips with the spellings picked by listening (letterVoice.gen.json)', () => {
     const [name, word] = introSequence('A', 'en');
-    expect(voiceOf(name)).toMatchObject({ lang: 'en', text: '[A](/ˈA/).' });
+    expect(voiceOf(name)).toMatchObject({ lang: 'en', text: `${voiceShort('A', 'en')}.` });
     expect(voiceOf(name)?.id).toMatch(/^en\/intro-ua-[a-z0-9]{7}$/);
-    expect(voiceOf(word)?.text).toBe('[A](/ˈA/) is for Apple.');
-    expect(voiceOf(introSequence('a', 'en')[0])?.text).toBe('Little [A](/ˈA/).');
+    expect(voiceOf(word)?.text).toBe(`${voiceShort('A', 'en')} is for Apple.`);
+    expect(voiceOf(introSequence('a', 'en')[0])?.text).toBe(`Little ${voiceShort('A', 'en')}.`);
     expect(voiceOf(introSequence('a', 'en')[1])?.id).toBe(voiceOf(word)?.id);
   });
 
@@ -94,7 +95,7 @@ describe('soundSequence (the Letter sound button)', () => {
 describe('prompts', () => {
   it('asks for the item in each language', () => {
     expect(sequenceText(findPrompt('D', 'en'))).toBe('Find D!');
-    expect(voiceOf(findPrompt('D', 'en')[0])?.text).toBe('Find [D](/dˈi/)!');
+    expect(voiceOf(findPrompt('D', 'en')[0])?.text).toBe(`Find ${voiceShort('D', 'en')}!`);
     expect(sequenceText(findPrompt('D', 'es'))).toBe('¡Busca la de!');
     expect(sequenceText(findPrompt('7', 'es'))).toBe('¡Busca el siete!');
     expect(sequenceText(drawPrompt('b', 'es'))).toBe('¡Vamos a dibujar la be minúscula!');

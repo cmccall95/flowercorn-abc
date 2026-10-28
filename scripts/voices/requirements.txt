@@ -3,3 +3,4 @@ torch
 kokoro==0.9.4
 soundfile
 numpy
+faster-whisper==1.2.1

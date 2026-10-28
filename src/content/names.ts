@@ -1,3 +1,4 @@
+import LETTER_VOICE from './letterVoice.gen.json';
 import type { Lang } from './sets';
 
 // What the device voice should say for each symbol. Raw characters get misread ("A" as "uh"), so everything goes
@@ -39,18 +40,23 @@ export const shortName = (item: string, lang: Lang) =>
 export const numberWord = (n: number, lang: Lang) => NUMBER_WORDS[lang][n];
 
 /**
- * The same names written for the Kokoro voice generator. English letters carry exact phonemes in misaki's
- * link syntax, e.g. "[A](/ˈA/)"; Spanish letter names are already ordinary words.
+ * The same names written for the Kokoro voice generator. scripts/voices/letters.py listens to several spellings
+ * of each letter ("Ay", "A", phonemes…) with a speech recognizer and records the one heard correctly in
+ * letterVoice.gen.json; until it has, English uses exact phonemes and Spanish the ordinary letter name.
  */
 export function voiceName(item: string, lang: Lang): string {
-  if (isNumber(item) || lang === 'es') return spokenName(item, lang);
-  const marked = voiceShort(item, lang);
-  return isLower(item) ? `little ${marked}` : marked;
+  if (isNumber(item)) return spokenName(item, lang);
+  const short = voiceShort(item, lang);
+  if (!isLower(item)) return short;
+  return lang === 'es' ? `${short} minúscula` : `little ${short}`;
 }
 
 export function voiceShort(item: string, lang: Lang): string {
-  if (isNumber(item) || lang === 'es') return shortName(item, lang);
+  if (isNumber(item)) return shortName(item, lang);
   const up = item.toUpperCase();
+  const picked = (LETTER_VOICE as Record<string, Record<string, string>>)[lang]?.[up];
+  if (picked) return picked;
+  if (lang === 'es') return shortName(item, lang);
   return `[${up === 'Ñ' ? 'enye' : up}](/${EN_LETTER_PS[up]}/)`;
 }
 
