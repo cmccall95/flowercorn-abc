@@ -1,4 +1,7 @@
-// Trim silence from both ends of a recording and save it as a small mono WAV, which every browser can play back.
+import { normalize } from './carrier';
+
+// Trim silence from both ends of a recording, match its loudness to the game's other clips, and save it as a small
+// mono WAV, which every browser can play back.
 const THRESHOLD = 0.03;
 const PAD_S = 0.06;
 
@@ -15,7 +18,7 @@ export async function trimToWav(blob: Blob): Promise<Blob> {
     const pad = Math.round(PAD_S * buf.sampleRate);
     start = Math.max(0, start - pad);
     end = Math.min(data.length, end + pad);
-    return encodeWav(data.subarray(start, end), buf.sampleRate);
+    return encodeWav(normalize(data.slice(start, end), buf.sampleRate), buf.sampleRate);
   } finally {
     void ctx.close();
   }

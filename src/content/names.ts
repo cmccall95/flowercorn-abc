@@ -1,16 +1,9 @@
-import LETTER_VOICE from './letterVoice.gen.json';
 import type { Lang } from './sets';
 
 // What the device voice should say for each symbol. Raw characters get misread ("A" as "uh"), so everything goes
-// through these maps. The bundled Kokoro clips use exact phonemes instead (EN_LETTER_PS), so they're always right.
+// through these maps.
 const EN_LETTER: Record<string, string> = { A: 'ey', Ñ: 'enye' };
 
-/** English letter names in Kokoro/misaki phonemes (A = eɪ, I = aɪ, O = oʊ). */
-const EN_LETTER_PS: Record<string, string> = {
-  A: 'ˈA', B: 'bˈi', C: 'sˈi', D: 'dˈi', E: 'ˈi', F: 'ˈɛf', G: 'ʤˈi', H: 'ˈAʧ', I: 'ˈI', J: 'ʤˈA', K: 'kˈA',
-  L: 'ˈɛl', M: 'ˈɛm', N: 'ˈɛn', O: 'ˈO', P: 'pˈi', Q: 'kjˈu', R: 'ˈɑɹ', S: 'ˈɛs', T: 'tˈi', U: 'jˈu', V: 'vˈi',
-  W: 'dˈʌbᵊljˌu', X: 'ˈɛks', Y: 'wˈI', Z: 'zˈi', Ñ: 'ˈɛnjA',
-};
 const ES_LETTER: Record<string, string> = {
   A: 'a', B: 'be', C: 'ce', D: 'de', E: 'e', F: 'efe', G: 'ge', H: 'hache', I: 'i', J: 'jota', K: 'ka', L: 'ele',
   M: 'eme', N: 'ene', Ñ: 'eñe', O: 'o', P: 'pe', Q: 'cu', R: 'erre', S: 'ese', T: 'te', U: 'u', V: 'uve',
@@ -38,27 +31,6 @@ export const shortName = (item: string, lang: Lang) =>
   isNumber(item) ? spokenName(item, lang) : lang === 'es' ? ES_LETTER[item.toUpperCase()] : EN_LETTER[item.toUpperCase()] ?? item.toUpperCase();
 
 export const numberWord = (n: number, lang: Lang) => NUMBER_WORDS[lang][n];
-
-/**
- * The same names written for the Kokoro voice generator. scripts/voices/letters.py listens to several spellings
- * of each letter ("Ay", "A", phonemes…) with a speech recognizer and records the one heard correctly in
- * letterVoice.gen.json; until it has, English uses exact phonemes and Spanish the ordinary letter name.
- */
-export function voiceName(item: string, lang: Lang): string {
-  if (isNumber(item)) return spokenName(item, lang);
-  const short = voiceShort(item, lang);
-  if (!isLower(item)) return short;
-  return lang === 'es' ? `${short} minúscula` : `little ${short}`;
-}
-
-export function voiceShort(item: string, lang: Lang): string {
-  if (isNumber(item)) return shortName(item, lang);
-  const up = item.toUpperCase();
-  const picked = (LETTER_VOICE as Record<string, Record<string, string>>)[lang]?.[up];
-  if (picked) return picked;
-  if (lang === 'es') return shortName(item, lang);
-  return `[${up === 'Ñ' ? 'enye' : up}](/${EN_LETTER_PS[up]}/)`;
-}
 
 /** A file-safe id for an item: "ua" (A), "la" (a), "uny" (Ñ), "n3" (3). Never relies on letter case. */
 export function slug(item: string): string {

@@ -1,6 +1,7 @@
 name: Generate voice clips
 
-# Makes the bundled letter/number clips with Kokoro (open-source TTS), commits them, then redeploys.
+# Makes the bundled clips (letter names from Commons recordings and Kokoro; words with Kokoro), commits them,
+# then redeploys.
 on:
   workflow_dispatch:
   push:
@@ -46,28 +47,36 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.cache/huggingface
-          key: kokoro-82m-whisper-small-v1
-      # 1. Listen to several spellings of each letter name and keep the one Whisper hears correctly.
-      - run: python scripts/voices/letters.py src/content/letterVoice.gen.json scripts/voices/letters-report.md
-      # 2. List every line the game says, using those spellings.
+          key: kokoro-82m-wav2vec2-phonemes-v1
+      # 1. Letter names: Commons recordings (Spanish, CC0) and Kokoro "A. A." with the first copy cut off,
+      #    each checked with a phoneme recognizer.
+      - run: set -o pipefail; python scripts/voices/letter_names.py public/voice/letters scripts/voices/letters-report.md 2>&1 | tee -a voices-log.txt
+      # 2. List every line of words the game says (letter names are separate clips).
       - run: npx vite-node scripts/voices/manifest.ts > scripts/voices/manifest.json
       # 3. Make the clips that are new or changed.
-      - run: python scripts/voices/generate.py scripts/voices/manifest.json public/voice
-      # 4. Listen to every letter clip and report any that don't name their letter.
-      - run: python scripts/voices/verify.py scripts/voices/manifest.json public/voice scripts/voices/report.md
-      - run: cat scripts/voices/letters-report.md scripts/voices/report.md >> "$GITHUB_STEP_SUMMARY"
+      - run: set -o pipefail; python scripts/voices/generate.py scripts/voices/manifest.json public/voice 2>&1 | tee -a voices-log.txt
+      - run: cat scripts/voices/letters-report.md >> "$GITHUB_STEP_SUMMARY"
       - name: Commit clips
         id: commit
         run: |
-          git add public/voice src/content/letterVoice.gen.json scripts/voices/letters-report.md scripts/voices/report.md
+          git add -A public/voice scripts/voices/letters-report.md
           if git diff --cached --quiet; then echo "changed=false" >> "$GITHUB_OUTPUT"; exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Update voice clips" -m "$(head -c 3000 scripts/voices/report.md)"
-          git push
+          git commit -m "Update voice clips" -m "$(head -c 3000 scripts/voices/letters-report.md)"
+          git pull --rebase origin main && git push
           echo "changed=true" >> "$GITHUB_OUTPUT"
       - name: Redeploy with the new clips
         if: steps.commit.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run deploy.yml --ref main
+      # Job logs can't be read from outside GitHub, so a failure commits the end of the log as the report.
+      - name: Commit the log if something failed
+        if: failure()
+        run: |
+          { echo '# Letter-name clips'; echo; echo 'The clip builder failed. Log:'; echo; echo '```'; tail -n 80 voices-log.txt; echo '```'; } > scripts/voices/letters-report.md
+          git add scripts/voices/letters-report.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Voice clips: failure log" && git pull --rebase origin main && git push

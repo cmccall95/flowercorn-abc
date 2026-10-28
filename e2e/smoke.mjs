@@ -46,10 +46,10 @@ check((await spoken(page)).some((s) => s.endsWith('|Lily')) && (await spoken(pag
 await page.getByRole('button', { name: /^ABC .*Find/ }).click();
 await page.waitForTimeout(1800);
 await page.screenshot({ path: `${OUT}/04-find-keyboard-start.png` });
-check((await spoken(page)).some((s) => s.endsWith('|Ey is for Apple.')), 'introduces A: name, pause, picture word');
+check((await spoken(page)).some((s) => s.endsWith('|is for Apple.')) && (await spoken(page)).some((s) => s.endsWith('|ey')), 'introduces A: name, pause, picture word');
 await page.getByRole('button', { name: 'Next' }).click();
 await page.waitForTimeout(1600);
-check((await spoken(page)).some((s) => s.endsWith('|B is for Butterfly.')), '▶ moves on to B');
+check((await spoken(page)).some((s) => s.endsWith('|is for Butterfly.')), '▶ moves on to B');
 await page.getByRole('button', { name: 'Previous' }).click();
 await page.waitForTimeout(300);
 check((await page.textContent('.letter-card'))?.trim() === 'A', '◀ goes back to A');
@@ -63,13 +63,13 @@ check((await page.textContent('.letter-card'))?.trim() === 'A', 'arrow keys move
 
 await page.keyboard.press('b');
 await page.waitForTimeout(400);
-check((await spoken(page)).some((s) => s.includes('Find ey!')), 'wrong key asks again gently');
+check((await spoken(page)).some((s) => s.endsWith('|Can you find')), 'wrong key asks again gently');
 // After a key press on a laptop, the keyboard prompt replaces bubbles.
 check(await page.locator('.prompt-row').isVisible(), 'shows the keyboard prompt after a key press');
 await page.keyboard.press('a');
 await page.waitForTimeout(1000);
 await page.screenshot({ path: `${OUT}/05-correct.png` });
-check((await spoken(page)).some((s) => s.endsWith('|Lily')) && (await spoken(page)).some((s) => /\|Ey!$/.test(s)), 'cheers with her name, then says the letter');
+check((await spoken(page)).some((s) => s.endsWith('|Lily')) && (await spoken(page)).some((s) => /\|ey$/.test(s)), 'cheers with her name, then says the letter');
 
 await page.getByRole('button', { name: /Español/ }).click();
 await page.waitForTimeout(1600);
@@ -77,7 +77,7 @@ const es = (await spoken(page)).filter((s) => s.startsWith('es-MX'));
 check(es.length > 0, `Español button says it in Spanish (${es.join(' / ')})`);
 await page.getByRole('button', { name: /Letter sound/ }).click();
 await page.waitForTimeout(1500);
-check((await spoken(page)).some((s) => / says$/.test(s)), 'Letter sound button plays the phonics sound');
+check((await spoken(page)).some((s) => /\|says$/.test(s)), 'Letter sound button plays the phonics sound');
 
 for (const k of ['b', 'c', 'd']) { await page.waitForTimeout(1800); await page.keyboard.press(k); }
 await page.waitForTimeout(1800);
@@ -142,15 +142,19 @@ const soundCheck = await page.textContent('.settings-grid');
 check(/Sound check/.test(soundCheck) && /This device's voice\s*working/.test(soundCheck), 'Sound check reports the device voice working');
 await page.screenshot({ path: `${OUT}/13-settings.png`, fullPage: true });
 check(/In-app voice/.test(soundCheck) && /Download voice/.test(soundCheck), 'Settings offers the in-app voice download');
-await page.getByRole('tab', { name: /Fix letters/ }).click();
-check(/Download it above first/.test(await page.textContent('.parent')), 'Fix letters asks for the in-app voice first');
+await page.getByRole('tab', { name: /Letters & sounds/ }).click();
+const lettersPage = await page.textContent('.parent');
+check(/now from/.test(lettersPage) && /download the in-app voice/.test(lettersPage), 'Letters & sounds shows where each letter comes from');
+await page.getByRole('button', { name: /Record all letters/ }).click();
+check(/1 of \d+/.test(await page.textContent('.parent')), 'Record all letters walks through the letters');
+await page.getByRole('button', { name: 'Finish' }).click();
 await page.getByRole('tab', { name: /What's new/ }).click();
 await page.screenshot({ path: `${OUT}/14b-whats-new.png`, fullPage: true });
 const news = await page.textContent('.parent');
 check(/Version \d+\.\d+\.\d+/.test(news) && /you're on this one/.test(news), "What's new lists versions and marks the current one");
 check(/You're on the newest version/.test(news), 'says the running version is the newest');
-await page.getByRole('tab', { name: /Record sounds/ }).click();
-await page.screenshot({ path: `${OUT}/14-record.png`, fullPage: true });
+await page.getByRole('tab', { name: /Letters & sounds/ }).click();
+await page.screenshot({ path: `${OUT}/14-letters.png`, fullPage: true });
 
 // ---------- tablet: bubbles, Spanish ----------
 const tab = await browser.newPage({ viewport: { width: 820, height: 1180 }, hasTouch: true, isMobile: true });
@@ -171,7 +175,7 @@ check(await tab.locator('.choice').count() === 3, 'tablet shows 3 bubbles at lev
 check(clips.some((u) => u.includes('/voice/es/intro-n0-')) || (await spoken(tab)).some((s) => s.includes('¡Cero!')), 'numbers start at zero in Spanish (bundled clip or device voice)');
 await tab.locator('.choice', { hasText: /^0$/ }).tap({ force: true });
 await tab.waitForTimeout(3500);
-check((await spoken(tab)).some((s) => s.includes('Lily') && s.startsWith('es-MX')), 'Spanish cheer with her name');
+check((await spoken(tab)).some((s) => s.includes('Lily') && s.startsWith('es-MX')), `Spanish cheer with her name (${(await spoken(tab)).slice(-6).join(' / ')})`);
 await tab.waitForTimeout(1600);
 await tab.screenshot({ path: `${OUT}/16-tablet-next.png` });
 await tab.goto(BASE);
@@ -212,7 +216,14 @@ await sam.waitForTimeout(800);
 check(samClips.some((c) => c.startsWith('en/p-')), `greeting plays from clips with no device voice (${samClips.join(', ')})`);
 await sam.getByRole('button', { name: /^ABC .*Find/ }).tap();
 await sam.waitForTimeout(2500);
-check(samClips.some((c) => c.startsWith('en/intro-ua-')) && samClips.some((c) => c.startsWith('en/word-a-')), 'letter A plays name clip, then picture-word clip');
+// The letter clips and word clips are made by the Generate voice clips workflow; check them once they exist.
+const letterIndex = await sam.evaluate((b) => fetch(`${b}voice/letters/index.json`).then((r) => (r.ok ? r.json() : {})).catch(() => ({})), BASE);
+const voiceIndex = await sam.evaluate((b) => fetch(`${b}voice/index.json`).then((r) => r.json()), BASE);
+const wordClip = Object.keys(voiceIndex).find((k) => samClips.includes(`${k}.mp3`) && k.startsWith('en/f-'));
+if (letterIndex['en/name/a']) check(samClips.includes('letters/en/name/a.mp3'), `letter A plays its recorded name (${samClips.join(', ')})`);
+else console.log('skip - no bundled letter clips yet');
+if (Object.keys(voiceIndex).some((k) => k.startsWith('en/f-'))) check(!!wordClip, 'then the picture-word clip');
+else console.log('skip - no word clips yet');
 const before = samClips.length;
 await sam.locator('.choice', { hasText: /^A$/ }).tap({ force: true });
 await sam.waitForTimeout(1500);

@@ -29,3 +29,4 @@ scripts/voices/manifest.json
 
 # In-app voice model, downloaded at deploy time (scripts/voices/fetch_model.py)
 public/models
+__pycache__/

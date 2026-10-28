@@ -1,7 +1,7 @@
 {
   "name": "flowercorn-abc",
   "private": true,
-  "version": "0.9.1",
+  "version": "0.10.0",
   "type": "module",
   "scripts": {
     "emoji": "node scripts/gen-emoji.mjs",

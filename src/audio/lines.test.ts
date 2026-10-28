@@ -1,35 +1,36 @@
 import { describe, expect, it } from 'vitest';
-import { voiceShort } from '../content/names';
-import { allVoiceLines, drawPrompt, findPrompt, introSequence, nameLine, phrase, type Segment, sequenceText, soundSequence } from './lines';
+import { LETTER_GAP_MS, allVoiceLines, drawPrompt, findPrompt, introSequence, nameLine, phrase, type Segment, sequenceText, soundSequence } from './lines';
 
-const voiceOf = (seg: Segment) => (seg.kind === 'phrase' ? undefined : seg.voice);
+const voiceOf = (seg: Segment) => (seg.kind === 'say' || seg.kind === 'clip' ? seg.voice : undefined);
+/** A sequence as pieces: letters as [X], word clips as their text, pauses as | when they're long. */
+const shape = (segs: Segment[]) => segs.map((s) => `${(s.pause ?? 0) >= 1000 ? '| ' : ''}${s.kind === 'letter' ? `[${s.item}]` : s.kind === 'clip' ? `/${s.fallback}/` : s.kind === 'say' ? s.text : '…'}`);
 
 describe('introSequence', () => {
   it('says the name, pauses a full second, then the picture word', () => {
     const seq = introSequence('C', 'en');
-    expect(seq.map((x) => x.kind)).toEqual(['say', 'say']);
-    expect(sequenceText(seq)).toBe('C. C is for Cat.');
+    expect(shape(seq)).toEqual(['[C]', '| [C]', 'is for Cat.']);
+    expect(sequenceText(seq)).toBe('C C is for Cat.');
     expect(seq[1].pause).toBe(1000);
+    expect(seq[2].pause).toBe(LETTER_GAP_MS);
+  });
+
+  it('plays each letter name as its own clip, joined to the words with a short gap', () => {
+    expect(LETTER_GAP_MS).toBeGreaterThanOrEqual(150);
+    expect(LETTER_GAP_MS).toBeLessThanOrEqual(250);
+    const [, , words] = introSequence('A', 'en');
+    expect(voiceOf(words)).toMatchObject({ lang: 'en', text: 'is for Apple.' });
+    expect(voiceOf(words)?.id).toMatch(/^en\/f-[a-z0-9]{7}$/);
   });
 
   it('uses Spanish letter names and words', () => {
-    expect(sequenceText(introSequence('C', 'es'))).toBe('Ce. Ce de Conejo.');
-    expect(sequenceText(introSequence('Ñ', 'es'))).toBe('Eñe. Eñe de Ñandú.');
-    expect(sequenceText(introSequence('H', 'es'))).toBe('Hache. Hache de Helado.');
+    expect(shape(introSequence('C', 'es'))).toEqual(['[C]', '| [C]', 'de Conejo.']);
+    expect(shape(introSequence('Ñ', 'es'))).toEqual(['[Ñ]', '| [Ñ]', 'de Ñandú.']);
+    expect(sequenceText(introSequence('H', 'es'))).toBe('hache hache de Helado.');
   });
 
   it('marks lowercase letters', () => {
-    expect(sequenceText(introSequence('b', 'en'))).toBe('Little B. B is for Butterfly.');
-    expect(sequenceText(introSequence('b', 'es'))).toBe('Be minúscula. Be de Ballena.');
-  });
-
-  it('names letters in clips with the spellings picked by listening (letterVoice.gen.json)', () => {
-    const [name, word] = introSequence('A', 'en');
-    expect(voiceOf(name)).toMatchObject({ lang: 'en', text: `${voiceShort('A', 'en')}.` });
-    expect(voiceOf(name)?.id).toMatch(/^en\/intro-ua-[a-z0-9]{7}$/);
-    expect(voiceOf(word)?.text).toBe(`${voiceShort('A', 'en')} is for Apple.`);
-    expect(voiceOf(introSequence('a', 'en')[0])?.text).toBe(`Little ${voiceShort('A', 'en')}.`);
-    expect(voiceOf(introSequence('a', 'en')[1])?.id).toBe(voiceOf(word)?.id);
+    expect(shape(introSequence('b', 'en'))).toEqual(['Here is little', '[B]', '| [B]', 'is for Butterfly.']);
+    expect(shape(introSequence('b', 'es'))).toEqual(['Esta es la', '[B]', 'minúscula.', '| [B]', 'de Ballena.']);
   });
 
   it('counts up for numbers', () => {
@@ -73,10 +74,9 @@ describe('phrase', () => {
 describe('soundSequence (the Letter sound button)', () => {
   it('leads in, then plays the sound twice', () => {
     const seq = soundSequence('C', 'en');
-    expect(seq.map((s) => s.kind)).toEqual(['say', 'clip', 'clip']);
-    expect(sequenceText(seq)).toBe('C says kuh kuh');
-    expect(voiceOf(seq[1])).toMatchObject({ lang: 'en', phonemes: 'kə' });
-    expect(sequenceText(soundSequence('C', 'es'))).toBe('La ce suena ca ca');
+    expect(shape(seq)).toEqual(['The letter', '[C]', 'says', '/kuh/', '/kuh/']);
+    expect(voiceOf(seq[3])).toMatchObject({ lang: 'en', phonemes: 'kə' });
+    expect(shape(soundSequence('C', 'es'))).toEqual(['La letra', '[C]', 'suena', '/ca/', '/ca/']);
   });
 
   it('says the Spanish H is silent instead of a sound', () => {
@@ -86,20 +86,32 @@ describe('soundSequence (the Letter sound button)', () => {
   });
 
   it('shares one recording per letter for both cases', () => {
-    const upper = soundSequence('M', 'en')[1];
-    const lower = soundSequence('m', 'en')[1];
+    const upper = soundSequence('M', 'en')[3];
+    const lower = soundSequence('m', 'en')[3];
     expect(upper.kind === 'clip' && lower.kind === 'clip' && upper.key === lower.key).toBe(true);
   });
 });
 
 describe('prompts', () => {
   it('asks for the item in each language', () => {
-    expect(sequenceText(findPrompt('D', 'en'))).toBe('Find D!');
-    expect(voiceOf(findPrompt('D', 'en')[0])?.text).toBe(`Find ${voiceShort('D', 'en')}!`);
-    expect(sequenceText(findPrompt('D', 'es'))).toBe('¡Busca la de!');
+    expect(shape(findPrompt('D', 'en'))).toEqual(['Can you find', '[D]']);
+    expect(shape(findPrompt('d', 'en'))).toEqual(['Can you find little', '[D]']);
+    expect(shape(findPrompt('D', 'es'))).toEqual(['¿Puedes encontrar la', '[D]']);
     expect(sequenceText(findPrompt('7', 'es'))).toBe('¡Busca el siete!');
-    expect(sequenceText(drawPrompt('b', 'es'))).toBe('¡Vamos a dibujar la be minúscula!');
-    expect(sequenceText(nameLine('w', 'en'))).toBe('W!');
+    expect(shape(drawPrompt('b', 'es'))).toEqual(['Vamos a dibujar la', '[B]', 'minúscula.']);
+    expect(shape(drawPrompt('B', 'en'))).toEqual(["Let's draw the letter", '[B]']);
+    expect(shape(nameLine('w', 'en'))).toEqual(['[W]']);
+  });
+
+  it('keeps word clips to a few words, so the voice has room to start cleanly', () => {
+    const items = ['A', 'a', 'Ñ', 'ñ', 'Q'];
+    for (const lang of ['en', 'es'] as const) {
+      for (const item of items) {
+        for (const seg of [...introSequence(item, lang), ...findPrompt(item, lang), ...drawPrompt(item, lang), ...soundSequence(item, lang)]) {
+          if (seg.kind === 'say') expect(seg.text.length, seg.text).toBeGreaterThan(3);
+        }
+      }
+    }
   });
 });
 
@@ -108,14 +120,21 @@ describe('allVoiceLines', () => {
 
   it('covers every letter, both cases, Ñ and numbers in both languages', () => {
     const ids = new Set(lines.map((l) => l.id.replace(/-[a-z0-9]{7}$/, '')));
-    for (const id of ['en/intro-ua', 'en/intro-la', 'en/intro-uny', 'es/intro-uny', 'es/intro-n10', 'en/find-lz', 'es/draw-n3', 'en/sound-ny', 'es/name-ny', 'en/says-a', 'es/says-h', 'en/word-a', 'en/p', 'es/p']) {
+    for (const id of ['es/intro-n10', 'en/find-n3', 'es/draw-n3', 'en/sound-ny', 'es/name-n5', 'es/says-h', 'en/f', 'es/f', 'en/p', 'es/p']) {
       expect(ids.has(id), id).toBe(true);
     }
     expect(ids.has('es/sound-h')).toBe(false);
   });
 
+  it('never puts a letter name in a word clip', () => {
+    const texts = new Set(lines.map((l) => l.text));
+    expect(texts).toContain('is for Apple.');
+    expect(texts).toContain('Here is little');
+    expect([...texts].some((t) => t && /^[A-Z][.!]?$/.test(t))).toBe(false);
+  });
+
   it('changes the id when the words change', () => {
-    expect(voiceOf(introSequence('A', 'en')[0])?.id).not.toBe(voiceOf(introSequence('a', 'en')[0])?.id);
+    expect(voiceOf(introSequence('A', 'en')[2])?.id).not.toBe(voiceOf(introSequence('B', 'en')[2])?.id);
     expect(voiceOf(soundSequence('C', 'en')[1])?.id).toBe(voiceOf(soundSequence('c', 'en')[1])?.id);
   });
 

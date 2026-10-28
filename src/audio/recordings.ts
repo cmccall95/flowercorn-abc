@@ -1,13 +1,13 @@
 import { del, get, keys, set } from 'idb-keyval';
 import { forget, playBuffer } from './player';
 
-// Grown-up recordings of phonics sounds live in IndexedDB: localStorage is too small for audio.
+// Grown-up recordings (phonics sounds, letter names, her name) live in IndexedDB: localStorage is too small for audio.
 const cache = new Map<string, Blob | null>();
 let known: Set<string> | null = null;
 
 export async function loadRecordingKeys(): Promise<Set<string>> {
   try {
-    known = new Set((await keys()).map(String).filter((k) => k.startsWith('phonic:') || k.startsWith('name:')));
+    known = new Set((await keys()).map(String).filter((k) => k.startsWith('phonic:') || k.startsWith('name:') || k.startsWith('lettername:')));
   } catch {
     known = new Set();
   }

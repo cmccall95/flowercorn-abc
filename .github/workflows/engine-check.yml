@@ -1,7 +1,7 @@
 name: Check the in-app voice
 
 # Loads the in-app voice (Kokoro, in the browser) like a phone would, has it say every letter line,
-# listens with Whisper, and commits scripts/voices/engine-report.md.
+# listens with a phoneme recognizer, and commits scripts/voices/engine-report.md.
 on:
   workflow_dispatch:
   push:
@@ -12,6 +12,9 @@ on:
       - src/audio/lines.ts
       - e2e/engine-check.mjs
       - scripts/voices/engine_verify.py
+      - scripts/voices/common.py
+      - src/audio/carrier.ts
+      - src/audio/sayLetter.ts
 
 permissions:
   contents: write
@@ -58,12 +61,12 @@ jobs:
         with:
           python-version: '3.12'
       - if: steps.say.outcome == 'success'
-        run: pip install numpy faster-whisper==1.2.1
+        run: pip install -r scripts/voices/requirements.txt
       - if: steps.say.outcome == 'success'
         uses: actions/cache@v4
         with:
           path: ~/.cache/huggingface
-          key: whisper-small-v1
+          key: wav2vec2-phonemes-v1
       - if: steps.say.outcome == 'success'
         run: python scripts/voices/engine_verify.py engine-out scripts/voices/engine-report.md
       - if: always()

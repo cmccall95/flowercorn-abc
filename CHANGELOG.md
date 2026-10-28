@@ -7,6 +7,24 @@ Grown-up corner, which also says whether a newer one is out.
 - **Minor** (0.**10**.0): a new learning module or a big new capability.
 - **Major** (**1**.0.0): the first version we'd call complete and ready for everyday use.
 
+## [0.10.0] - 2026-10-28
+### Changed
+- **Letters are recordings first.** A letter's name is now its own short clip, joined to the words around it
+  ("A" · "is for Apple."), because computer voices garble a letter said on its own (the odd sound at the start of
+  A and Z). Each letter uses the first of: your recording → a built-in recording → the in-app voice → the phone's
+  voice.
+- **Spanish letter names are real recordings** by a native speaker (Jynus, Wikimedia Commons, CC0). C and Z are
+  made by the voice instead, because that speaker says them the Spain way.
+- When a voice has to say a letter, it says it twice ("A. A.") and the first copy is cut off.
+- Prompts now read "Can you find B?" and "The letter B says…", which give the voice room to start cleanly.
+- All clips, including your recordings, are matched to the same loudness.
+### Added
+- **Letters & sounds** in the Grown-up corner (replaces Fix letters and Record sounds): hear each letter's name and
+  sound the way the game plays them, mark them 👍/👎 (a 👎 built-in recording is skipped), record your own, or
+  type a spelling for the in-app voice.
+- **Record all letters**: a guided walk through every letter's name and sound, with tips. Silence is trimmed for you.
+- The voice checks now listen for the actual sounds (a phoneme recognizer) instead of guessing words.
+
 ## [0.9.1] - 2026-10-28
 ### Fixed
 - The in-app voice's files are now hosted with the app instead of downloaded from Hugging Face, which was refusing

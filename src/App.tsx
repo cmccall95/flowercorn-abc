@@ -4,7 +4,7 @@ import { hush, phrase, playSequence } from './audio/sayLetter';
 import { SPOKEN } from './content/phrases';
 import { setSfxVolume } from './audio/sfx';
 import { setVoiceSettings } from './audio/speech';
-import { loadVoiceIndex } from './audio/voiceClips';
+import { loadLetterIndex, loadVoiceIndex } from './audio/voiceClips';
 import { startEngine } from './audio/engine/engine';
 import { Emoji } from './components/Emoji';
 import { SoundWarning } from './components/SoundCheck';
@@ -27,7 +27,7 @@ export default function App() {
   useSessionTimer(playing ? profile?.id ?? null : null);
   const needsBreak = useBreakReminder(playing, settings.breakMinutes);
 
-  useEffect(() => { void loadRecordingKeys(); void loadVoiceIndex(); }, []);
+  useEffect(() => { void loadRecordingKeys(); void loadVoiceIndex(); void loadLetterIndex(); }, []);
   // The in-app voice loads from this device once it has been downloaded.
   useEffect(() => { if (settings.engine) startEngine(); }, [settings.engine]);
   useEffect(() => {

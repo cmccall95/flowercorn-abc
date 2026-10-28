@@ -211,7 +211,14 @@ img.emoji { object-fit: contain; }
 .rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(4.2rem, 1fr)); gap: 0.6rem; }
 .rec-grid button { border: 2px solid transparent; background: var(--bg); border-radius: 1rem; aspect-ratio: 1; font-family: var(--font-letter); font-weight: 700; font-size: 1.8rem; position: relative; }
 .rec-grid button.has::after { content: '✓'; position: absolute; top: 0.15rem; right: 0.4rem; font-size: 0.9rem; color: #2e9d76; font-family: var(--font-display); }
+.rec-grid button.good::before, .rec-grid button.bad::before { position: absolute; top: 0.15rem; left: 0.35rem; font-size: 0.8rem; font-family: var(--font-display); }
+.rec-grid button.good::before { content: '👍'; }
+.rec-grid button.bad::before { content: '👎'; }
 .rec-grid button[aria-pressed='true'] { border-color: var(--p1); background: color-mix(in srgb, var(--p1) 18%, white); }
+.letter-detail { display: flex; flex-direction: column; gap: 0.8rem; padding-top: 1rem; border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent); }
+.letter-detail h4 { margin: 0; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.big-letter { font-family: var(--font-letter); font-size: 2.2rem; font-weight: 700; line-height: 1; }
+.btn[aria-pressed='true'] { outline: 3px solid var(--p1); }
 .recorder { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
 .mic { border: 0; width: 5.5rem; height: 5.5rem; border-radius: 50%; background: var(--p2); color: white; font-size: 2.2rem; box-shadow: 0 0.3rem 0 var(--shadow); touch-action: none; }
 .mic.on { background: #ff6b8a; animation: hint 0.8s ease-in-out infinite; }

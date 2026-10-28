@@ -5,17 +5,15 @@ import type { Go, ParentTab } from '../../nav';
 import { useApp } from '../../state/store';
 import { Dashboard } from './Dashboard';
 import { Players } from './Players';
-import { RecordSounds } from './RecordSounds';
 import { SettingsPanel } from './SettingsPanel';
 import { WhatsNew } from './WhatsNew';
-import { FixLetters } from './FixLetters';
+import { LettersAndSounds } from './LettersAndSounds';
 import { VersionStatus } from '../../components/VersionInfo';
 
 const TABS: { id: ParentTab; label: string; e: string }[] = [
   { id: 'dashboard', label: 'Dashboard', e: '📊' },
   { id: 'settings', label: 'Settings', e: '⚙️' },
-  { id: 'letters', label: 'Fix letters', e: '🔤' },
-  { id: 'record', label: 'Record sounds', e: '🎙️' },
+  { id: 'letters', label: 'Letters & sounds', e: '🔤' },
   { id: 'players', label: 'Players', e: '👧' },
   { id: 'news', label: "What's new", e: '✨' },
 ];
@@ -38,10 +36,9 @@ export function ParentCorner({ tab = 'dashboard', go }: { tab?: ParentTab; go: G
         </nav>
         {tab === 'dashboard' && <Dashboard />}
         {tab === 'settings' && <SettingsPanel />}
-        {tab === 'record' && <RecordSounds />}
         {tab === 'players' && <Players />}
         {tab === 'news' && <WhatsNew />}
-        {tab === 'letters' && <FixLetters />}
+        {tab === 'letters' && <LettersAndSounds />}
       </div>
     </div>
   );

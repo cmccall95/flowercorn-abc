@@ -28,8 +28,8 @@ Hold the ⚙️ button on the first screen for 3 seconds.
   per-letter timing chart, and **Export CSV**. At Level 3 her trouble letters come up about twice as often.
 - **Settings:** English / Español / Both, keyboard or bubbles, level, voice choice per language with speed and pitch,
   sound volume, calmer animations, break reminder, colors.
-- **Record sounds:** record the real phonics sounds in your own voice (hold the mic, say "mmm"). Until a letter is
-  recorded, the device voice makes its best guess.
+- **Letters & sounds:** hear every letter's name and sound as the game plays them, mark them 👍/👎, and record
+  your own (one at a time or with the guided **Record all letters**).
 - **Players:** add siblings, set "how to say it" so the voice pronounces each name right.
 
 Everything (progress, stickers, stats, recordings) stays on the device. Nothing is sent anywhere.
@@ -60,18 +60,37 @@ Pushing to `main` runs lint, tests and the build, then deploys to GitHub Pages.
 
 ### Voice
 
-The game speaks with **Kokoro-82M** (Apache-2.0), a free open-source voice:
+Voices garble very short lines, and a single letter is the shortest line there is. So **letter names and phonics
+sounds are separate clips**, joined to short phrases of words with a 200 ms gap ("A" · "is for Apple."). Each one
+comes from the first of these that exists:
+
+1. **Your recording**: Grown-up corner → **Letters & sounds** (one letter at a time, or **Record all letters**).
+   Silence is trimmed and the volume matched automatically.
+2. **A bundled recording** (`public/voice/letters/{en,es}/{name,sound}/`, listed in `index.json`):
+   - Spanish names: a native speaker's recordings from Wikimedia Commons, by **Jynus (CC0)**. Not c and z, which
+     the speaker says the Spain way (/θ/).
+   - Everything else: Kokoro saying the name twice ("A. A.") with the first copy cut off.
+   A 👎 in Letters & sounds skips the bundled clip for that letter.
+3. **The in-app voice**, saying it twice and keeping the second copy (`src/audio/carrier.ts`).
+4. **The device's own voice.**
+
+Words are spoken by **Kokoro-82M** (Apache-2.0), a free open-source voice:
 
 - **In the app** (`src/audio/engine/`): Kokoro runs on the device in a web worker (kokoro-js + ONNX Runtime). It
   downloads once (~90 MB, from Grown-up corner → Settings) and then works offline. English is turned into sounds
-  with espeak-ng; Spanish with our own Latin American rules (`spanish.ts`). Letter names are passed as exact
-  phonemes, and grown-ups can override any letter in **Fix letters**. Everything it makes is saved on the device.
+  with espeak-ng; Spanish with our own Latin American rules (`spanish.ts`). Everything it makes is saved on the device.
 - **Bundled clips** (`public/voice/`): the same voice, pre-made by the **Generate voice clips** workflow, so the game
   talks before the in-app voice is downloaded.
 - **Device voice**: the browser's own speech, as a last resort.
 
-The **Check the in-app voice** workflow loads the in-app voice in Chromium, has it say every letter line, listens
-with Whisper and commits `scripts/voices/engine-report.md`.
+All clips are matched to the same loudness so the pieces join evenly. The **Generate voice clips** workflow builds
+the letter clips and checks each with a phoneme recognizer (wav2vec2 espeak phonemes,
+`facebook/wav2vec2-lv-60-espeak-cv-ft`), writing `scripts/voices/letters-report.md`. The **Check the in-app voice**
+workflow does the same for the in-app voice and writes `scripts/voices/engine-report.md`. The reports are a first
+pass; listening is the real test.
+
+Spanish letter recordings: Jynus, Wikimedia Commons (CC0),
+[Category:Spanish pronunciation of letters](https://commons.wikimedia.org/wiki/Category:Spanish_pronunciation_of_letters).
 
 Art: [Microsoft Fluent Emoji](https://github.com/microsoft/fluentui-emoji) (MIT). Fonts: Andika (made for early
 readers, with the single-story a and g) and Fredoka, both SIL Open Font License.

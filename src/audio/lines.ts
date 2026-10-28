@@ -1,11 +1,11 @@
-import { isNumber, letterSlug, numberWord, shortName, slug, spokenName, voiceName, voiceShort } from '../content/names';
+import { isLower, isNumber, letterSlug, numberWord, slug, spokenName } from '../content/names';
 import { isSilent, phonicFor, recordingKey } from '../content/phonics';
 import { CHEERS } from '../content/cheers';
 import { SPOKEN } from '../content/phrases';
 import { itemsFor, type Lang } from '../content/sets';
 import { GOLD_STICKERS, STICKER_PAGES, STICKERS } from '../content/stickers';
 import { wordFor } from '../content/words';
-import { type EnginePiece, marker, parsePieces } from './engine/pieces';
+import type { EnginePiece } from './engine/pieces';
 
 /**
  * A fixed line with a bundled Kokoro clip at public/voice/<id>.mp3 (see scripts/voices). The id ends with a
@@ -31,8 +31,16 @@ export type PhrasePart = { voice: VoiceLine } | { nameKey: string; spoken: strin
 export type Segment = (
   /** A fixed line: the in-app voice (`engine`), else its bundled clip (`voice`), else the device voice (`text`). */
   | { kind: 'say'; text: string; lang: Lang; voice?: VoiceLine; engine?: EnginePiece[] }
-  /** A phonics sound: a grown-up's recording, else the in-app voice, else the bundled clip, else the device voice. */
-  | { kind: 'clip'; key: string; fallback: string; lang: Lang; voice?: VoiceLine; engine?: EnginePiece[] }
+  /**
+   * A letter's name on its own: a grown-up's recording, else a bundled recording (public/voice/letters), else the
+   * in-app voice (said twice, keeping the second), else the device voice.
+   */
+  | { kind: 'letter'; item: string; lang: Lang }
+  /**
+   * A phonics sound: a grown-up's recording, else a bundled recording, else the in-app voice, else the bundled
+   * Kokoro clip, else the device voice.
+   */
+  | { kind: 'clip'; key: string; fallback: string; lang: Lang; item: string; voice?: VoiceLine; engine?: EnginePiece[] }
   /**
    * A line that may include the child's name: bundled clips, with her recorded name slotted in (or the device
    * voice saying it, where there is one). `text` is the whole line, for captions and as a last resort.
@@ -41,6 +49,8 @@ export type Segment = (
 ) & { pause?: number };
 
 export const nameRecordingKey = (profileId: string) => `name:${profileId}`;
+/** A grown-up's recording of a letter's name (shared by both cases). */
+export const letterNameKey = (item: string, lang: Lang) => `lettername:${lang}:${item.toUpperCase()}`;
 
 /** Pause between a letter's name and its picture word: "A." … "A is for Apple." */
 export const NAME_TO_WORD_PAUSE_MS = 1000;
@@ -55,18 +65,35 @@ function fingerprint(s: string): string {
 }
 const voiceId = (lang: Lang, base: string, words: string) => `${lang}/${base}-${fingerprint(words)}`;
 
-/** One spoken line, written twice: plain text for the device voice, and markup for the Kokoro clip. */
-function line(lang: Lang, id: string, build: (name: (item: string) => string, short: (item: string) => string) => string): Segment {
-  const text = build((x) => spokenName(x, lang), (x) => shortName(x, lang));
-  const voiceText = build((x) => voiceName(x, lang), (x) => voiceShort(x, lang));
-  const engine = parsePieces(build((x) => marker(x, true), (x) => marker(x, false)));
-  return { kind: 'say', text, lang, voice: { id: voiceId(lang, id, voiceText), lang, text: voiceText }, engine };
+/** A fixed line of words (no letter names in it): the in-app voice, its bundled clip, or the device voice. */
+function line(lang: Lang, id: string, text: string): Segment {
+  return { kind: 'say', text, lang, voice: { id: voiceId(lang, id, text), lang, text }, engine: [text] };
 }
+
+/** Gap between a letter's clip and the words around it: "A" · "is for Apple." */
+export const LETTER_GAP_MS = 200;
+
+type Piece = string | { letter: string };
+const L = (item: string): Piece => ({ letter: item.toUpperCase() });
+
+/**
+ * A sentence built from pieces: each letter name is its own clip (a grown-up's recording, a bundled recording,
+ * or the in-app voice saying it twice and keeping the second), joined to short phrases of words with a small
+ * gap. Voices garble very short lines, so the phrases are kept to a few words where possible.
+ */
+function sentence(lang: Lang, pieces: Piece[]): Segment[] {
+  return pieces.map((p, i): Segment => {
+    const seg: Segment = typeof p === 'string' ? line(lang, 'f', p) : { kind: 'letter', item: p.letter, lang };
+    return i > 0 ? { ...seg, pause: LETTER_GAP_MS } : seg;
+  });
+}
+
+const withPause = (segs: Segment[], pause: number): Segment[] => segs.map((s, i) => (i === 0 ? { ...s, pause } : s));
 
 function sound(item: string, lang: Lang): Segment {
   const phonic = phonicFor(item, lang);
   return {
-    kind: 'clip', key: recordingKey(item, lang), fallback: phonic?.approx ?? '', lang,
+    kind: 'clip', key: recordingKey(item, lang), fallback: phonic?.approx ?? '', lang, item: item.toUpperCase(),
     voice: phonic?.ps ? { id: voiceId(lang, `sound-${letterSlug(item)}`, phonic.ps), lang, phonemes: phonic.ps } : undefined,
     engine: phonic?.ps ? [{ ps: phonic.ps }] : undefined,
   };
@@ -81,48 +108,49 @@ export function introSequence(item: string, lang: Lang): Segment[] {
   const id = slug(item);
   if (isNumber(item)) {
     const n = Number(item);
+    const name = cap(spokenName(item, lang));
     const counting = Array.from({ length: n }, (_, i) => numberWord(i + 1, lang)).join(', ');
-    return [line(lang, `intro-${id}`, (name) => {
-      if (n === 0) return lang === 'es' ? '¡Cero! Cero es nada. ¡No hay ninguna!' : 'Zero! Zero means none at all!';
-      return lang === 'es' ? `¡${cap(name(item))}! Vamos a contar: ${counting}. ¡${cap(name(item))}!` : `${cap(name(item))}! Let's count: ${counting}. ${cap(name(item))}!`;
-    })];
+    if (n === 0) return [line(lang, `intro-${id}`, lang === 'es' ? '¡Cero! Cero es nada. ¡No hay ninguna!' : 'Zero! Zero means none at all!')];
+    return [line(lang, `intro-${id}`, lang === 'es' ? `¡${name}! Vamos a contar: ${counting}. ¡${name}!` : `${name}! Let's count: ${counting}. ${name}!`)];
   }
   const word = wordFor(item, lang);
-  const first = line(lang, `intro-${id}`, (name) => `${cap(name(item))}.`);
-  const second = (build: Parameters<typeof line>[2]): Segment => ({ ...line(lang, `word-${letterSlug(item)}`, build), pause: NAME_TO_WORD_PAUSE_MS });
-  if (lang === 'es') return [first, second((_, short) => `${cap(short(item))} de ${word[0]}.`)];
+  const lower = isLower(item);
+  const first = lang === 'es'
+    ? sentence(lang, lower ? ['Esta es la', L(item), 'minúscula.'] : [L(item)])
+    : sentence(lang, lower ? ['Here is little', L(item)] : [L(item)]);
   // Ñ in English mode: there's no English picture word.
-  if (item.toUpperCase() === 'Ñ') return [first, second((_, short) => `${cap(short(item))} is a Spanish letter.`)];
-  return [first, second((_, short) => `${cap(short(item))} is for ${word[0]}.`)];
+  const rest = lang === 'es' ? `de ${word[0]}.` : item.toUpperCase() === 'Ñ' ? 'is a Spanish letter.' : `is for ${word[0]}.`;
+  return [...first, ...withPause(sentence(lang, [L(item), rest]), NAME_TO_WORD_PAUSE_MS)];
 }
 
 /**
- * The "Letter sound" button: "C says… /k/ … /k/" / "La ce suena… /k/ … /k/".
+ * The "Letter sound" button: "The letter C says… /k/ … /k/" / "La letra ce suena… /k/ … /k/".
  * Spanish H explains that it's silent.
  */
 export function soundSequence(item: string, lang: Lang): Segment[] {
   if (isNumber(item)) return introSequence(item, lang);
-  if (isSilent(item, lang)) return [line(lang, `says-${letterSlug(item)}`, () => 'La hache no suena. ¡Shhh!')];
-  const lead = line(lang, `says-${letterSlug(item)}`, (_, short) => (lang === 'es' ? `La ${short(item)} suena` : `${cap(short(item))} says`));
-  return [lead, sound(item, lang), sound(item, lang)];
+  if (isSilent(item, lang)) return [line(lang, `says-${letterSlug(item)}`, 'La hache no suena. ¡Shhh!')];
+  const lead = lang === 'es' ? sentence(lang, ['La letra', L(item), 'suena']) : sentence(lang, ['The letter', L(item), 'says']);
+  return [...lead, sound(item, lang), sound(item, lang)];
 }
 
-/** The short spoken prompt after a wrong answer: "Find C!" / "¡Busca la ce!" */
-export const findPrompt = (item: string, lang: Lang): Segment[] => [
-  line(lang, `find-${slug(item)}`, (name) =>
-    lang === 'es' ? `¡Busca ${isNumber(item) ? 'el' : 'la'} ${name(item)}!` : `Find ${name(item)}!`),
-];
+/** The short spoken prompt after a wrong answer: "Can you find C?" / "¿Puedes encontrar la ce?" */
+export function findPrompt(item: string, lang: Lang): Segment[] {
+  if (isNumber(item)) return [line(lang, `find-${slug(item)}`, lang === 'es' ? `¡Busca el ${spokenName(item, lang)}!` : `Find ${spokenName(item, lang)}!`)];
+  if (lang === 'es') return sentence(lang, isLower(item) ? ['¿Puedes encontrar la', L(item), 'minúscula?'] : ['¿Puedes encontrar la', L(item)]);
+  return sentence(lang, [isLower(item) ? 'Can you find little' : 'Can you find', L(item)]);
+}
 
-/** "Let's draw A!" / "¡Vamos a dibujar la a!" */
-export const drawPrompt = (item: string, lang: Lang): Segment[] => [
-  line(lang, `draw-${slug(item)}`, (name) =>
-    lang === 'es' ? `¡Vamos a dibujar ${isNumber(item) ? 'el' : 'la'} ${name(item)}!` : `Let's draw ${name(item)}!`),
-];
+/** "Let's draw the letter A!" / "¡Vamos a dibujar la a!" */
+export function drawPrompt(item: string, lang: Lang): Segment[] {
+  if (isNumber(item)) return [line(lang, `draw-${slug(item)}`, lang === 'es' ? `¡Vamos a dibujar el ${spokenName(item, lang)}!` : `Let's draw ${spokenName(item, lang)}!`)];
+  if (lang === 'es') return sentence(lang, isLower(item) ? ['Vamos a dibujar la', L(item), 'minúscula.'] : ['Vamos a dibujar la', L(item)]);
+  return sentence(lang, [isLower(item) ? "Let's draw little" : "Let's draw the letter", L(item)]);
+}
 
 /** Just the name, said after a cheer: "A!" / "¡A!" */
-export const nameLine = (item: string, lang: Lang): Segment[] => [
-  line(lang, `name-${letterSlug(item)}`, (_, short) => (lang === 'es' ? `¡${cap(short(item))}!` : `${cap(short(item))}!`)),
-];
+export const nameLine = (item: string, lang: Lang): Segment[] =>
+  isNumber(item) ? [line(lang, `name-${slug(item)}`, lang === 'es' ? `¡${cap(spokenName(item, lang))}!` : `${cap(spokenName(item, lang))}!`)] : sentence(lang, [L(item)]);
 
 /** Clean up the words around a name: "! Pick a game!" → "Pick a game!", ", you got…" → "You got…". */
 function tidy(piece: string, lang: Lang, afterName: boolean): string {
@@ -151,7 +179,8 @@ export function phrase(template: string, lang: Lang, vars: Record<string, string
 
 /** Plain text of a sequence, for tests and captions. */
 export const sequenceText = (segments: Segment[]) =>
-  segments.map((s) => (s.kind === 'clip' ? s.fallback : s.text)).join(' ');
+  segments.map((s) => (s.kind === 'clip' ? s.fallback : s.kind === 'letter' ? spokenName(s.item, s.lang) : s.text)).join(' ')
+    .replace(/\s+([,.!?])/g, '$1');
 
 /** Every bundled line, for the clip generator. Throws if two lines share an id but differ. */
 export function allVoiceLines(): VoiceLine[] {
@@ -177,7 +206,8 @@ export function allVoiceLines(): VoiceLine[] {
   return [...out.values()];
 
   function add(seg: Segment) {
-    const voices = seg.kind === 'phrase' ? seg.parts.flatMap((p) => ('voice' in p ? [p.voice] : [])) : seg.voice ? [seg.voice] : [];
+    const voices = seg.kind === 'phrase' ? seg.parts.flatMap((p) => ('voice' in p ? [p.voice] : []))
+      : seg.kind !== 'letter' && seg.voice ? [seg.voice] : [];
     for (const v of voices) {
       const prev = out.get(v.id);
       if (prev && JSON.stringify(prev) !== JSON.stringify(v)) throw new Error(`Voice line ${v.id} has two different texts`);

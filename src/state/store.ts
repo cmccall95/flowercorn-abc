@@ -32,6 +32,8 @@ export interface Settings {
   engine: boolean;
   /** Grown-up corrections for how a letter's name is said: { en: { C: 'see' } }. */
   letterFixes: Partial<Record<Lang, Record<string, string>>>;
+  /** Grown-ups' 👍/👎 on how each letter's name sounds. A 👎 built-in recording is skipped. */
+  letterReviews: Partial<Record<Lang, Record<string, 'good' | 'bad'>>>;
 }
 
 export interface Progress {
@@ -70,6 +72,7 @@ interface AppState {
 export const DEFAULT_SETTINGS: Settings = {
   lang: 'en', input: 'auto', levelMode: 'auto', voiceEn: '', voiceEs: '', rate: 0.9, pitch: 1.25,
   sfxVolume: 0.8, reduceMotion: false, breakMinutes: 15, palette: 'lavender', engine: false, letterFixes: {},
+  letterReviews: {},
 };
 
 export const DEFAULT_PROGRESS: Progress = { level: 1, step: 0, finished: 0 };

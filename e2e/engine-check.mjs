@@ -25,38 +25,18 @@ console.log('voice', state.status, state.error || '', `${loadSeconds.toFixed(1)}
 if (state.status !== 'ready') process.exit(1);
 
 const timings = [];
-const letters = { en: [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'], es: [...'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'] };
+const letters = { en: [...'ABCDEFGHIJKLMNOPQRSTUVWXYZÑ'], es: [...'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'] };
+// Each letter name the way the game asks for it when there's no recording: said twice ("A. A."). The check keeps
+// the second copy with the same trim the game uses (common.second_copy = src/audio/carrier.ts).
 for (const [lang, list] of Object.entries(letters)) {
   for (const letter of list) {
-    // The two lines a letter is introduced with: "A." … "A is for Apple."
-    const lines = await page.evaluate(([l, lg]) => {
-      const fc = window.__fcEngine;
-      return fc.introSequence(l, lg).filter((s) => s.engine).map((s) => fc.resolvePieces(s.engine, lg));
-    }, [letter, lang]);
-    for (const [i, parts] of lines.entries()) {
-      const t = Date.now();
-      const wav = await page.evaluate(([p, lg]) => window.__fcEngine.wavBase64(p, lg), [parts, lang]);
-      timings.push((Date.now() - t) / 1000);
-      const name = `${lang}-${letter === 'Ñ' ? 'NY' : letter}-${i === 0 ? 'name' : 'word'}`;
-      writeFileSync(`${out}/${name}.wav`, Buffer.from(wav, 'base64'));
-      writeFileSync(`${out}/${name}.json`, JSON.stringify(parts));
-    }
-  }
-}
-// Experiment: the same letter names said a few different ways, to find the clearest (see engine-report.md).
-const VARIANTS = {
-  plain: (n) => [n, { text: '.' }],
-  pause: (n) => [{ text: '… ' }, n, { text: '.' }],
-  bang: (n) => [n, { text: '!' }],
-  twice: (n) => [n, { text: '. ' }, n, { text: '.' }],
-};
-for (const [lang, list] of Object.entries(letters)) {
-  for (const letter of list) {
-    const name = await page.evaluate(([l, lg]) => window.__fcEngine.resolvePieces([{ item: l, long: false }], lg)[0], [letter, lang]);
-    for (const [v, make] of Object.entries(VARIANTS)) {
-      const wav = await page.evaluate(([p, lg]) => window.__fcEngine.wavBase64(p, lg), [make(name), lang]);
-      writeFileSync(`${out}/exp-${v}-${lang}-${letter === 'Ñ' ? 'NY' : letter}.wav`, Buffer.from(wav, 'base64'));
-    }
+    const parts = await page.evaluate(([l, lg]) => window.__fcEngine.carrierParts(l, lg), [letter, lang]);
+    const t = Date.now();
+    const wav = await page.evaluate(([p, lg]) => window.__fcEngine.wavBase64(p, lg), [parts, lang]);
+    timings.push((Date.now() - t) / 1000);
+    const name = `${lang}-${letter === 'Ñ' ? 'NY' : letter}-carrier`;
+    writeFileSync(`${out}/${name}.wav`, Buffer.from(wav, 'base64'));
+    writeFileSync(`${out}/${name}.json`, JSON.stringify(parts));
   }
 }
 

@@ -2,8 +2,8 @@
 
 Usage: python scripts/voices/generate.py scripts/voices/manifest.json public/voice
 
-Each manifest line has an id and either `text` (read with Kokoro's pronunciation rules; letter names use the
-spellings letters.py picked) or `phonemes` (spoken exactly, for phonics sounds). Clips are only
+Each manifest line has an id and either `text` (words read with Kokoro's pronunciation rules; letter names are
+separate clips, see letter_names.py) or `phonemes` (spoken exactly, for phonics sounds). Clips are only
 regenerated when their line, voice or settings change; public/voice/index.json records what exists.
 """
 import hashlib
@@ -12,9 +12,9 @@ import os
 import subprocess
 import sys
 
-from common import RATE, SPEED, VOICES, synthesize
+from common import RATE, SPEED, VOICES, normalize, synthesize
 
-VERSION = 1  # bump to regenerate everything
+VERSION = 2  # bump to regenerate everything (2: loudness matched to the letter clips)
 
 manifest_path, out_dir = sys.argv[1], sys.argv[2]
 lines = json.load(open(manifest_path, encoding='utf-8'))
@@ -42,14 +42,16 @@ for line in lines:
     h = fingerprint(line)
     path = os.path.join(out_dir, f"{line['id']}.mp3")
     if old.get(line['id']) != h or not os.path.exists(path):
-        encode_mp3(synthesize(line['lang'], text=line.get('text'), phonemes=line.get('phonemes')), path)
+        encode_mp3(normalize(synthesize(line['lang'], text=line.get('text'), phonemes=line.get('phonemes'))), path)
         made += 1
         print(f"made {line['id']}: {line.get('text') or '/' + line['phonemes'] + '/'}", flush=True)
     new_index[line['id']] = h
 
 # Remove clips for lines that no longer exist.
 removed = 0
-for root, _, files in os.walk(out_dir):
+for root, dirs, files in os.walk(out_dir):
+    if root == out_dir and 'letters' in dirs:
+        dirs.remove('letters')  # letter names and sounds: letter_names.py
     for f in files:
         if f.endswith('.mp3'):
             rel = os.path.relpath(os.path.join(root, f), out_dir)[:-4].replace(os.sep, '/')
