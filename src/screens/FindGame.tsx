@@ -60,6 +60,8 @@ export function FindGame({ activity, go }: { activity: ActivityId; go: Go }) {
   const wrongInputs = useRef<string[]>([]);
   const replays = useRef(0);
   const hinted = useRef(false);
+  // Letters already shown in random levels, so ◀ can go back to them.
+  const past = useRef<string[]>([]);
   const cardControls = useAnimationControls();
 
   // Her trouble letters and usual mix-ups, from past play, steer the random levels.
@@ -71,8 +73,8 @@ export function FindGame({ activity, go }: { activity: ActivityId; go: Go }) {
 
   const roundLang = (s: number): Lang => (settings.lang === 'both' ? (s % 2 ? 'es' : 'en') : settings.lang);
 
-  const startRound = useCallback((s: number, previous?: string) => {
-    const target = pickTarget(items, level, s, Math.random, previous, trouble);
+  const startRound = useCallback((s: number, previous?: string, forced?: string) => {
+    const target = forced ?? pickTarget(items, level, s, Math.random, previous, trouble);
     const lang = roundLang(s);
     const r: Round = { target, lang, shownAt: Date.now(), choices: makeChoices(items, target, level, Math.random, history.get(target)?.usualMixup ?? undefined) };
     setRound(r);
@@ -101,6 +103,29 @@ export function FindGame({ activity, go }: { activity: ActivityId; go: Go }) {
     void playSequence(soundSequence(round.target, round.lang));
   };
 
+  // ◀ / ▶ and tapping the alphabet strip: move without answering (nothing is recorded).
+  const sequence = config.order === 'sequence';
+  const jumpTo = (s: number) => {
+    if (!round || busy.current) return;
+    sfx.pop();
+    setStep(s);
+    useApp.getState().setProgress(key, { ...saved, level, step: s });
+    startRound(s);
+  };
+  const goBack = () => {
+    if (!round || busy.current) return;
+    if (sequence) return jumpTo((step - 1 + items.length) % items.length);
+    const prev = past.current.pop();
+    if (prev) { sfx.pop(); startRound(step, undefined, prev); }
+  };
+  const goNext = () => {
+    if (!round || busy.current) return;
+    if (sequence) return jumpTo((step + 1) % items.length);
+    past.current.push(round.target);
+    sfx.pop();
+    startRound(step, round.target);
+  };
+
   const finishSet = (): Sticker | null => {
     const store = useApp.getState();
     const done = saved.finished + 1;
@@ -122,6 +147,7 @@ export function FindGame({ activity, go }: { activity: ActivityId; go: Go }) {
     burst();
     void playSequence([{ kind: 'say', text: line.replace('{n}', name), lang: round.lang }, ...nameLine(round.target, round.lang)]);
     const stickerDue = useApp.getState().addStar(STICKER_EVERY);
+    past.current.push(round.target);
     const next = step + 1;
     const setDone = next >= items.length;
     let prize: Sticker | null = null;
@@ -160,6 +186,8 @@ export function FindGame({ activity, go }: { activity: ActivityId; go: Go }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!round || busy.current || reward || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === 'ArrowLeft') { e.preventDefault(); goBack(); return; }
+      if (e.key === 'ArrowRight') { e.preventDefault(); goNext(); return; }
       const now = Date.now();
       const res = matchKey(e.key, round.target, buffer);
       if (res.kind === 'ignore') return;
@@ -198,8 +226,8 @@ export function FindGame({ activity, go }: { activity: ActivityId; go: Go }) {
       />
 
       {config.strip && (
-        <div className="strip" aria-hidden>
-          {items.map((x, i) => <span key={x} className={i < step ? 'done' : i === step ? 'now' : ''}>{x}</span>)}
+        <div className="strip">
+          {items.map((x, i) => <button key={x} className={i < step ? 'done' : i === step ? 'now' : ''} onClick={() => i !== step && jumpTo(i)} aria-label={`Go to ${x}`}>{x}</button>)}
         </div>
       )}
 
@@ -222,9 +250,11 @@ export function FindGame({ activity, go }: { activity: ActivityId; go: Go }) {
         </div>
 
         <div className="hear">
+          <button className="btn nav" onClick={goBack} aria-label="Previous" disabled={!sequence && past.current.length === 0}><Emoji e="◀️" /></button>
           <button className="btn" onClick={() => replay('en')}><Emoji e="🔊" /> {t('hearEnglish')}</button>
           <button className="btn" onClick={() => replay('es')}><Emoji e="🔊" /> {t('hearSpanish')}</button>
           {!isNumber(round.target) && <button className="btn" onClick={playSound}><Emoji e="🔤" /> {t('letterSound')}</button>}
+          <button className="btn nav" onClick={goNext} aria-label="Next"><Emoji e="▶️" /></button>
         </div>
       </div>
 
