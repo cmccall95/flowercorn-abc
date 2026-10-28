@@ -1,0 +1,44 @@
+{
+  "name": "flowercorn-abc",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "emoji": "node scripts/gen-emoji.mjs",
+    "predev": "node scripts/gen-emoji.mjs",
+    "dev": "vite",
+    "prebuild": "node scripts/gen-emoji.mjs",
+    "build": "tsc -b && vite build",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@fontsource/andika": "^5.1.0",
+    "@fontsource/fredoka": "^5.1.0",
+    "canvas-confetti": "^1.9.3",
+    "framer-motion": "^11.11.17",
+    "idb-keyval": "^6.2.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@iconify-json/fluent-emoji-flat": "^1.2.6",
+    "@types/canvas-confetti": "^1.6.4",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "eslint": "^9.13.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.14",
+    "globals": "^15.11.0",
+    "jsdom": "^25.0.1",
+    "typescript": "~5.6.2",
+    "typescript-eslint": "^8.11.0",
+    "vite": "^5.4.10",
+    "vite-plugin-pwa": "^0.21.1",
+    "vitest": "^2.1.8"
+  }
+}

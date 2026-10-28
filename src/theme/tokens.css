@@ -1,0 +1,37 @@
+/* FlowerCorn Land design tokens. Lavender Dream is her pick; the other two stay as hidden alternate themes. */
+:root,
+:root[data-palette='lavender'] {
+  --bg: #f4eeff;
+  --card: #ffffff;
+  --p1: #b79cff; /* lavender: primary */
+  --p2: #ff9ecf; /* pink */
+  --p3: #9ad8ff; /* sky */
+  --p4: #ffe07a; /* butter */
+  --p5: #8fe3cf; /* mint */
+  --ink: #43306b;
+  --ink-soft: #7a6a9c;
+  --sky-top: #ede4ff;
+  --sky-bottom: #e3f4ff;
+  --grass: #cff3e4;
+  --grass-deep: #a9e6cd;
+  --shadow: color-mix(in srgb, var(--ink) 16%, transparent);
+  --confetti: #b79cff, #ff9ecf, #9ad8ff, #ffe07a, #8fe3cf;
+
+  --font-display: 'Fredoka', 'Baloo 2', 'Nunito', system-ui, sans-serif;
+  --font-letter: 'Andika', 'Comic Sans MS', 'Trebuchet MS', sans-serif;
+
+  --radius-lg: 28px;
+  --radius-md: 18px;
+  --tap: 96px; /* minimum touch target on tablets */
+  color-scheme: light;
+}
+
+:root[data-palette='blossom'] {
+  --bg: #fff0f7; --p1: #ff8fc7; --p2: #b79cff; --p3: #8fe3cf; --p4: #ffe07a; --p5: #9ad8ff;
+  --ink: #5b2a6e; --ink-soft: #8c6a99; --sky-top: #ffe3f1; --sky-bottom: #f3ebff; --grass: #bdefd9; --grass-deep: #98e2c3;
+}
+
+:root[data-palette='sherbet'] {
+  --bg: #fff6ea; --p1: #ffa37a; --p2: #ff8fc7; --p3: #8fe3cf; --p4: #ffe07a; --p5: #9ad8ff;
+  --ink: #5a2f4f; --ink-soft: #94687f; --sky-top: #fff0dc; --sky-bottom: #ffe6f2; --grass: #c8f0c9; --grass-deep: #a5e3a7;
+}
