@@ -31,23 +31,40 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm i --no-save playwright@1.49.1 && npx playwright install --with-deps chromium
-      - run: npx vite preview --port 4173 &
-      - run: node e2e/engine-check.mjs http://localhost:4173/flowercorn-abc/ engine-out
-      - uses: actions/setup-python@v5
+      - name: Have the in-app voice say every letter line
+        id: say
+        run: |
+          mkdir -p engine-out
+          npx vite preview --port 4173 > engine-out/server.txt 2>&1 &
+          npx --yes wait-on@8.0.1 -t 60000 http://localhost:4173/flowercorn-abc/
+          set -o pipefail
+          node e2e/engine-check.mjs http://localhost:4173/flowercorn-abc/ engine-out 2>&1 | tee engine-out/log.txt
+      - name: Report a failure (so it can be read from the repo)
+        if: failure() && steps.say.outcome == 'failure'
+        run: |
+          { echo '# In-app voice check'; echo; echo 'The voice did not finish. Log:'; echo; echo '```'; tail -n 80 engine-out/log.txt; echo '```'; } > scripts/voices/engine-report.md
+      - if: steps.say.outcome == 'success'
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install numpy faster-whisper==1.2.1
-      - uses: actions/cache@v4
+      - if: steps.say.outcome == 'success'
+        run: pip install numpy faster-whisper==1.2.1
+      - if: steps.say.outcome == 'success'
+        uses: actions/cache@v4
         with:
           path: ~/.cache/huggingface
           key: whisper-small-v1
-      - run: python scripts/voices/engine_verify.py engine-out scripts/voices/engine-report.md
-      - run: cat scripts/voices/engine-report.md >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - if: steps.say.outcome == 'success'
+        run: python scripts/voices/engine_verify.py engine-out scripts/voices/engine-report.md
+      - if: always()
+        run: cat scripts/voices/engine-report.md >> "$GITHUB_STEP_SUMMARY" || true
+      - if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: engine-audio
           path: engine-out
       - name: Commit report
+        if: always()
         run: |
           git add scripts/voices/engine-report.md
           git diff --cached --quiet && exit 0

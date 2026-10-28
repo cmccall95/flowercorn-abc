@@ -9,7 +9,10 @@ mkdirSync(out, { recursive: true });
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
-page.on('console', (m) => { if (m.type() === 'error') console.log('console:', m.text()); });
+page.on('console', (m) => console.log(`console.${m.type()}:`, m.text()));
+page.on('pageerror', (e) => console.log('pageerror:', e.message));
+page.on('requestfailed', (r) => console.log('requestfailed:', r.url(), r.failure()?.errorText));
+page.on('worker', (w) => console.log('worker started:', w.url()));
 await page.goto(url);
 await page.waitForFunction(() => window.__fcEngine);
 
