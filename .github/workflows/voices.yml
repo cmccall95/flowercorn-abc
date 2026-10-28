@@ -48,6 +48,10 @@ jobs:
         with:
           path: ~/.cache/huggingface
           key: kokoro-82m-wav2vec2-phonemes-v1
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/commons-letters
+          key: commons-spanish-letters-v1
       # 1. Letter names: Commons recordings (Spanish, CC0) and Kokoro "A. A." with the first copy cut off,
       #    each checked with a phoneme recognizer.
       - run: set -o pipefail; python scripts/voices/letter_names.py public/voice/letters scripts/voices/letters-report.md 2>&1 | tee -a voices-log.txt

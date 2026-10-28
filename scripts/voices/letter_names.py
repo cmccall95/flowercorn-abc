@@ -14,6 +14,8 @@ import os
 import re
 import subprocess
 import sys
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -27,10 +29,35 @@ CREDIT = 'Jynus, Wikimedia Commons (CC0)'
 SPAIN_ONLY = {'C', 'Z'}  # /θ/ in the Commons recordings; the game uses Latin American Spanish
 
 
-def fetch(url):
-    req = urllib.request.Request(url, headers={'User-Agent': UA})
-    with urllib.request.urlopen(req, timeout=60) as r:
-        return r.read()
+CACHE = os.path.expanduser('~/.cache/commons-letters')  # kept between runs, so each file is downloaded once
+
+
+def fetch(url, tries=5):
+    """Download politely: one request at a time, waiting as long as Wikimedia asks when it says to slow down."""
+    for attempt in range(tries):
+        req = urllib.request.Request(url, headers={'User-Agent': UA})
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+                return r.read()
+        except urllib.error.HTTPError as e:
+            if e.code != 429 or attempt == tries - 1:
+                raise
+            wait = int(e.headers.get('Retry-After') or 30 * (attempt + 1))
+            print(f'Wikimedia asked us to slow down; waiting {wait}s', flush=True)
+            time.sleep(wait)
+
+
+def download(title, url):
+    """A Commons file, from the local cache when it's been downloaded before."""
+    os.makedirs(CACHE, exist_ok=True)
+    path = os.path.join(CACHE, title.removeprefix('File:').replace('/', '_'))
+    if not os.path.exists(path):
+        time.sleep(2)
+        data = fetch(url)
+        with open(path, 'wb') as f:
+            f.write(data)
+    with open(path, 'rb') as f:
+        return f.read()
 
 
 def commons_files():
@@ -105,9 +132,12 @@ for lang, letters in LETTERS.items():
         if lang == 'es' and letter not in SPAIN_ONLY and letter in commons:
             title, url, licence, artist = commons[letter]
             if 'CC0' in licence and 'Jynus' in artist:
-                audio = normalize(trim_silence(decode(fetch(url))))
-                info = {'source': 'commons', 'license': 'CC0', 'credit': CREDIT, 'file': title.removeprefix('File:')}
-                how = f'Commons: {title.removeprefix("File:")}'
+                try:
+                    audio = normalize(trim_silence(decode(download(title, url))))
+                    info = {'source': 'commons', 'license': 'CC0', 'credit': CREDIT, 'file': title.removeprefix('File:')}
+                    how = f'Commons: {title.removeprefix("File:")}'
+                except Exception as e:  # couldn't download: the voice makes this one instead
+                    print(f'could not download {title}: {e}', flush=True)
             else:
                 print(f'skipping {title}: licence {licence!r}, artist {artist!r}', flush=True)
         if info is None:
