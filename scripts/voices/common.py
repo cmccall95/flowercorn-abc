@@ -178,8 +178,8 @@ def expected(lang, letter):
     EspeakWrapper.set_data_path(espeakng_loader.get_data_path())
     text = EN_SPELL[letter] if lang == 'en' else ES_NAME[letter]
     out = phonemize(text, language='en-us' if lang == 'en' else 'es-419', backend='espeak',
-                    separator=Separator(phone=' ', word=' '), strip=True)
-    return _phones(out)
+                    separator=Separator(phone=' ', word='|'), strip=True)
+    return _phones(out.replace('|', ' '))
 
 
 def _distance(a, b):
