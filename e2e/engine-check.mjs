@@ -43,6 +43,23 @@ for (const [lang, list] of Object.entries(letters)) {
     }
   }
 }
+// Experiment: the same letter names said a few different ways, to find the clearest (see engine-report.md).
+const VARIANTS = {
+  plain: (n) => [n, { text: '.' }],
+  pause: (n) => [{ text: '… ' }, n, { text: '.' }],
+  bang: (n) => [n, { text: '!' }],
+  twice: (n) => [n, { text: '. ' }, n, { text: '.' }],
+};
+for (const [lang, list] of Object.entries(letters)) {
+  for (const letter of list) {
+    const name = await page.evaluate(([l, lg]) => window.__fcEngine.resolvePieces([{ item: l, long: false }], lg)[0], [letter, lang]);
+    for (const [v, make] of Object.entries(VARIANTS)) {
+      const wav = await page.evaluate(([p, lg]) => window.__fcEngine.wavBase64(p, lg), [make(name), lang]);
+      writeFileSync(`${out}/exp-${v}-${lang}-${letter === 'Ñ' ? 'NY' : letter}.wav`, Buffer.from(wav, 'base64'));
+    }
+  }
+}
+
 // A cheer with a name, in both languages.
 for (const [lang, text] of [['en', 'Great job, Charlotte!'], ['es', '¡Muy bien, Charlotte!']]) {
   const wav = await page.evaluate(([t, lg]) => window.__fcEngine.wavBase64([{ text: t }], lg), [text, lang]);
