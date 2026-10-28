@@ -1,129 +1,62 @@
 # In-app voice check
 
-Voice loaded in 8s on the build machine; 106 lines took 2.96s each on average (max 4.71s).
+Voice loaded in 7s on the build machine; 54 lines took 3.20s each on average (max 4.51s).
 
-Listened with Whisper: 42 of 106 letter lines named the right letter.
+Letter names said twice, second copy kept, checked with a phoneme recognizer: en 16 of 27, es 1 of 27 sound right.
 
-## Ways of saying a letter name
-
-| language | way | heard right | missed |
-|---|---|---|---|
-| en | bang | 11 of 26 | A (“They.”), B (“Buh-bye.”), E (“Lee.”), F (“enough”), G (“Adjie”), H (“Later.”), I (“Bye.”), L (“Now.”), M (“them”), N (“And...”), O (“I know.”), Q (“Thank you.”), R (“Alar”), S (“Yes.”), T (“See you.”) |
-| en | pause | 16 of 26 | E (“As ye.”), F (“Left.”), H (“Age.”), K (“Okay.”), M (“XM”), N (“The end.”), O (“Hello.”), P (“Applié.”), Q (“Thank you.”), S (“Yes.”) |
-| en | plain | 13 of 26 | A (“Nay.”), E (“Lee.”), F (“left”), H (“Nate.”), I (“Zai.”), K (“Okay.”), L (“Now.”), M (“Them.”), N (“And...”), O (“No.”), Q (“Thank you.”), R (“Alar.”), T (“I see.”) |
-| en | twice | 23 of 26 | E (“I leave here.”), H (“HH.”), S (“An SS.”) |
-| es | bang | 1 of 27 | A (“Ya.”), B (“Best.”), C (“...síen.”), D (“Déjame.”), E (“De esto.”), F (“¡Nefen!”), G (“¡Nos vemos!”), H (“¡Gracias!”), I (“Adios.”), J (“¿Y por qué?”), K (“Híjole.”), L (“¡Tvelle!”), M (“¡Déma eh!”), N (“¡Ve, net!”), Ñ (“¡Deñe!”), O (“No, es que...”), P (“...el baile.”), Q (“Me cago.”), R (“¡De re!”), S (“Besley.”), T (“¡Adiós!”), U (“¡Suscríbete!”), V (“¡Número!”), W (“Tuve doble.”), X (“Le quiso.”), Y (“”) |
-| es | pause | 1 of 27 | A (“de”), B (“Abed.”), C (“I'll say”), D (“Adé...”), E (“”), F (“¡En efecto!”), G (“Gracias.”), H (“¡Ladre!”), I (“Aleve.”), J (“Y otra vez.”), K (“¡Licado!”), L (“¿Dónde él leía?”), M (“De medo.”), N (“Usted es neto.”), Ñ (“¡Bleñe!”), O (“¡Nihanos!”), P (“No pero...”), Q (“¡Suscríbete!”), R (“¡Mierde!”), S (“Ok, sir.”), T (“¡Oye!”), U (“aduuu”), V (“¡Solo malo!”), W (“Suve doble.”), Y (“¡Oh, yeah!”), Z (“Y se está...”) |
-| es | plain | 3 of 27 | A (“Ya.”), B (“Bad.”), E (“”), F (“¡Nefe!”), G (“Me sale.”), H (“¡Muchas gracias!”), I (“Anéis.”), J (“¿Y por qué?”), K (“¡Hickeld!”), L (“¡Vale!”), M (“¡Déjame!”), N (“¡Ven el!”), Ñ (“¡Deñe!”), O (“¿Qué tal?”), P (“He bailed.”), Q (“Thank you.”), R (“NERRE!”), S (“¡Vece!”), U (“”), V (“¡No veas!”), W (“¡Cube doble!”), X (“Alequis.”), Y (“¿Dónde?”), Z (“¡Se está!”) |
-| es | twice | 5 of 27 | A (“¡Lazalic!”), B (“Best best.”), E (“That's it.”), F (“¡Nefen, efek!”), G (“Más el rey.”), H (“Nath Shea Ad Shea.”), I (“¡A mí en la hija!”), J (“Hotel, hotel.”), K (“¡Calz Calz!”), L (“¡Salud, Elliot!”), M (“¡Déjame esto, déjame esto!”), N (“¡Déneis, Enec!”), Ñ (“¿Eso es o no es?”), O (“no es...”), P (“¡Pespe!”), Q (“¡Que os coge!”), S (“¡Esle, esle!”), T (“¡Hotel Teo!”), U (“¡No es over!”), V (“¡No ves, no ves!”), X (“Lekis Aekis”), Y (“Yes, yes.”) |
-
-| file | letter | heard | |
-|---|---|---|---|
-| en-A-name.wav | A | “Nay.” | ⚠️ |
-| en-A-word.wav | A | “It is for Apple.” | ⚠️ |
-| en-B-name.wav | B | “Baby.” | ⚠️ |
-| en-B-word.wav | B | “B is for butterfly.” | ✅ |
-| en-C-name.wav | C | “I see.” | ✅ |
-| en-C-word.wav | C | “See is for cat.” | ✅ |
-| en-D-name.wav | D | “D.” | ✅ |
-| en-D-word.wav | D | “Diaz for dinosaur.” | ⚠️ |
-| en-E-name.wav | E | “Lee.” | ⚠️ |
-| en-E-word.wav | E | “Ye is for elephant.” | ⚠️ |
-| en-F-name.wav | F | “left” | ⚠️ |
-| en-F-word.wav | F | “F is for flower.” | ✅ |
-| en-G-name.wav | G | “A G.” | ✅ |
-| en-G-word.wav | G | “G is for JRAF.” | ✅ |
-| en-H-name.wav | H | “Nate.” | ⚠️ |
-| en-H-word.wav | H | “H is for heart.” | ✅ |
-| en-I-name.wav | I | “Zai.” | ⚠️ |
-| en-I-word.wav | I | “Eye is for ice cream.” | ✅ |
-| en-J-name.wav | J | “A J.” | ✅ |
-| en-J-word.wav | J | “J is for juice.” | ✅ |
-| en-K-name.wav | K | “Okay.” | ⚠️ |
-| en-K-word.wav | K | “K is for kitten.” | ✅ |
-| en-L-name.wav | L | “Now.” | ⚠️ |
-| en-L-word.wav | L | “Alley is for Ladybug.” | ⚠️ |
-| en-M-name.wav | M | “Them.” | ⚠️ |
-| en-M-word.wav | M | “M is for moon.” | ✅ |
-| en-N-name.wav | N | “And...” | ⚠️ |
-| en-N-word.wav | N | “And he's for nest.” | ⚠️ |
-| en-O-name.wav | O | “No.” | ⚠️ |
-| en-O-word.wav | O | “No ways for owl.” | ⚠️ |
-| en-P-name.wav | P | “P.” | ✅ |
-| en-P-word.wav | P | “P is for puppy.” | ✅ |
-| en-Q-name.wav | Q | “Thank you.” | ⚠️ |
-| en-Q-word.wav | Q | “Q is for Queen.” | ✅ |
-| en-R-name.wav | R | “Alar.” | ⚠️ |
-| en-R-word.wav | R | “R is for rainbow.” | ✅ |
-| en-S-name.wav | S | “S.” | ✅ |
-| en-S-word.wav | S | “S is for star.” | ✅ |
-| en-T-name.wav | T | “I see.” | ⚠️ |
-| en-T-word.wav | T | “T is for tulip.” | ✅ |
-| en-U-name.wav | U | “You.” | ✅ |
-| en-U-word.wav | U | “U is for unicorn.” | ✅ |
-| en-V-name.wav | V | “a V” | ✅ |
-| en-V-word.wav | V | “V is for violin.” | ✅ |
-| en-W-name.wav | W | “W.” | ✅ |
-| en-W-word.wav | W | “W is for whale.” | ✅ |
-| en-X-name.wav | X | “X” | ✅ |
-| en-X-word.wav | X | “X's for Xylophone.” | ✅ |
-| en-Y-name.wav | Y | “Why?” | ✅ |
-| en-Y-word.wav | Y | “Why is for yo-yo?” | ✅ |
-| en-Z-name.wav | Z | “a z” | ✅ |
-| en-Z-word.wav | Z | “Z is for zebra.” | ✅ |
-| en-cheer.wav | — | “Great job, Charlotte.” | |
-| es-A-name.wav | A | “Ya.” | ⚠️ |
-| es-A-word.wav | A | “Adia, beija.” | ⚠️ |
-| es-B-name.wav | B | “Bad.” | ⚠️ |
-| es-B-word.wav | B | “B de pajena.” | ✅ |
-| es-C-name.wav | C | “Un saludo.” | ⚠️ |
-| es-C-word.wav | C | “Set de conejo.” | ⚠️ |
-| es-D-name.wav | D | “de” | ✅ |
-| es-D-word.wav | D | “de Dinosaurio.” | ✅ |
-| es-E-name.wav | E | “” | ⚠️ |
-| es-E-word.wav | E | “Vede estrella.” | ⚠️ |
-| es-F-name.wav | F | “¡Nefe!” | ⚠️ |
-| es-F-word.wav | F | “F de flor.” | ✅ |
-| es-G-name.wav | G | “Me sale.” | ⚠️ |
-| es-G-word.wav | G | “¡Que de gato!” | ⚠️ |
-| es-H-name.wav | H | “¡Muchas gracias!” | ⚠️ |
-| es-H-word.wav | H | “¡Haché de lado!” | ✅ |
-| es-I-name.wav | I | “anéis” | ⚠️ |
-| es-I-word.wav | I | “Sí, de Tijuana.” | ⚠️ |
-| es-J-name.wav | J | “¿Y por qué?” | ⚠️ |
-| es-J-word.wav | J | “¡Gotra de Xirafa!” | ⚠️ |
-| es-K-name.wav | K | “Ikele.” | ⚠️ |
-| es-K-word.wav | K | “Cádeco a la” | ⚠️ |
-| es-L-name.wav | L | “¡Vale!” | ⚠️ |
-| es-L-word.wav | L | “El de León” | ⚠️ |
-| es-M-name.wav | M | “¡Déjame!” | ⚠️ |
-| es-M-word.wav | M | “M de mariposa” | ✅ |
-| es-N-name.wav | N | “¡Ven el!” | ⚠️ |
-| es-N-word.wav | N | “¡Ena de nubes!” | ⚠️ |
-| es-NY-name.wav | Ñ | “¡Deñe!” | ⚠️ |
-| es-NY-word.wav | Ñ | “Señadeñando.” | ⚠️ |
-| es-O-name.wav | O | “y no” | ⚠️ |
-| es-O-word.wav | O | “¡Godeos!” | ⚠️ |
-| es-P-name.wav | P | “He bailed.” | ⚠️ |
-| es-P-word.wav | P | “Pede perro.” | ⚠️ |
-| es-Q-name.wav | Q | “Me cago.” | ⚠️ |
-| es-Q-word.wav | Q | “¡Cud de queso!” | ⚠️ |
-| es-R-name.wav | R | “NERRE!” | ⚠️ |
-| es-R-word.wav | R | “R de ratón” | ✅ |
-| es-S-name.wav | S | “¡Vece!” | ⚠️ |
-| es-S-word.wav | S | “S de sol.” | ✅ |
-| es-T-name.wav | T | “Y te ayudo.” | ✅ |
-| es-T-word.wav | T | “Sede tortuga.” | ⚠️ |
-| es-U-name.wav | U | “” | ⚠️ |
-| es-U-word.wav | U | “Zude Unicornio.” | ⚠️ |
-| es-V-name.wav | V | “¡No veas!” | ⚠️ |
-| es-V-word.wav | V | “Lluve de Baca.” | ⚠️ |
-| es-W-name.wav | W | “¡Cube doble!” | ⚠️ |
-| es-W-word.wav | W | “V doble de wafle.” | ⚠️ |
-| es-X-name.wav | X | “Alequis.” | ⚠️ |
-| es-X-word.wav | X | “Aquí es Dexilófono.” | ⚠️ |
-| es-Y-name.wav | Y | “¿Dónde?” | ⚠️ |
-| es-Y-word.wav | Y | “Ya deslludió.” | ⚠️ |
-| es-Z-name.wav | Z | “¡Se está!” | ⚠️ |
-| es-Z-word.wav | Z | “SETA DE SORO” | ✅ |
-| es-cheer.wav | — | “Muy bien, Charlotte.” | |
+| lang | letter | kept | heard | |
+|---|---|---|---|---|
+| en | A | second copy | a | ✅ |
+| en | B | second copy | b i | ✅ |
+| en | C | no split (whole) | a s i s i | ⚠️ extra sound at the start |
+| en | D | second copy | d e | ✅ |
+| en | E | second copy | i | ✅ |
+| en | F | second copy | ɛ f | ⚠️ 3 phonemes off |
+| en | G | no split (whole) | a dʒ i d r i | ⚠️ extra sound at the start |
+| en | H | no split (whole) | n eɪ tʃ ɛ j t ʃ | ⚠️ extra sound at the start |
+| en | I | second copy | aɪ | ✅ |
+| en | J | no split (whole) | a dʒ aɪ dʒ aɪ | ⚠️ extra sound at the start |
+| en | K | second copy | k ɛ | ✅ |
+| en | L | second copy | ɛ l | ✅ |
+| en | M | second copy | ɛ m | ✅ |
+| en | N | second copy | a n | ✅ |
+| en | Ñ | second copy | a n j aɪ | ⚠️ 2 phonemes off |
+| en | O | second copy | aʊ l | ⚠️ extra sound at the start |
+| en | P | second copy | p i | ✅ |
+| en | Q | second copy | k i | ⚠️ 2 phonemes off |
+| en | R | second copy | ɑ z | ⚠️ extra sound at the start |
+| en | S | no split (whole) | n a s a s | ⚠️ extra sound at the start |
+| en | T | second copy | t i | ✅ |
+| en | U | second copy | j ø | ✅ |
+| en | V | second copy | v i | ✅ |
+| en | W | second copy | d ʌ b l j oʊ | ⚠️ 2 phonemes off |
+| en | X | second copy | ɛ k s | ✅ |
+| en | Y | second copy | w aɪ | ✅ |
+| en | Z | second copy | z i | ✅ |
+| es | A | no split (whole) | n a z a r i | ⚠️ extra sound at the start |
+| es | B | no split (whole) | b eɪ z b eɪ | ⚠️ extra sound at the start |
+| es | C | no split (whole) | s e n s eɪ | ⚠️ 3 phonemes off |
+| es | D | no split (whole) | d e l d ɛ | ⚠️ 3 phonemes off |
+| es | E | no split (whole) | d e s ɛ v | ⚠️ extra sound at the start |
+| es | F | no split (whole) | n ɛ f ɛ r ɛ f oɪ | ⚠️ extra sound at the start |
+| es | G | no split (whole) | m a s ɛ l ə h ɛ ʎ ə | ⚠️ extra sound at the start |
+| es | H | no split (whole) | n a t ʃ e a t ʃ e | ⚠️ extra sound at the start |
+| es | I | no split (whole) | l aɪ l aɪ j a | ⚠️ extra sound at the start |
+| es | J | second copy | t ai5 | ⚠️ 3 phonemes off |
+| es | K | no split (whole) | i k a z k aʊ | ⚠️ extra sound at the start |
+| es | L | no split (whole) | s aɪ l l i t e l e | ⚠️ extra sound at the start |
+| es | M | no split (whole) | d aɪ m e ts a m e d | ⚠️ extra sound at the start |
+| es | N | no split (whole) | v a n e ts a n e k | ⚠️ extra sound at the start |
+| es | Ñ | no split (whole) | s a ɲ i e d a ɲ i a | ⚠️ extra sound at the start |
+| es | O | no split (whole) | d o m ɑ z | ⚠️ extra sound at the start |
+| es | P | second copy | p aɪ | ✅ |
+| es | Q | no split (whole) | ɪ k ɪ d k aʊ ʌ ð | ⚠️ extra sound at the start |
+| es | R | no split (whole) | s l e r v aɪ d ɛ r v ø | ⚠️ extra sound at the start |
+| es | S | no split (whole) | b ɛ s ɐ ɛ s l e ɡ | ⚠️ extra sound at the start |
+| es | T | no split (whole) | ʊ t eɪ l t eɪ l | ⚠️ extra sound at the start |
+| es | U | no split (whole) | d u ʌ z d a v ɐ | ⚠️ extra sound at the start |
+| es | V | no split (whole) | n u v e s aʊ l b e r | ⚠️ extra sound at the start |
+| es | W | second copy | u v ɛ d ɑ b l e | ⚠️ 5 phonemes off |
+| es | X | no split (whole) | m e k i z a k i z | ⚠️ extra sound at the start |
+| es | Y | no split (whole) | dʒ a z j e | ⚠️ extra sound at the start |
+| es | Z | second copy | t a | ⚠️ 2 phonemes off |
