@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { say } from '../audio/sayLetter';
+import { type NameRef, phrase, playSequence } from '../audio/sayLetter';
+import { SPOKEN } from '../content/phrases';
 import { sfx } from '../audio/sfx';
 import type { Lang } from '../content/sets';
 import type { Sticker } from '../content/stickers';
@@ -9,17 +10,17 @@ import { burst } from './Celebration';
 import { Emoji } from './Emoji';
 
 /** A shaking present; tapping it pops out the sticker she just won. */
-export function StickerReveal({ sticker, name, lang, onBook, onDone }: {
-  sticker: Sticker; name: string; lang: Lang; onBook: () => void; onDone: () => void;
+export function StickerReveal({ sticker, who, lang, onBook, onDone }: {
+  sticker: Sticker; who?: NameRef; lang: Lang; onBook: () => void; onDone: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  useEffect(() => { void say(tFor(lang, sticker.gold ? 'setDoneSay' : 'tapPresent', { n: name }), lang); }, [lang, name, sticker.gold]);
+  useEffect(() => { void playSequence(phrase(SPOKEN[lang][sticker.gold ? 'setDone' : 'tapPresent'], lang, {}, who)); }, [lang, who?.profileId, sticker.gold]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openIt = () => {
     setOpen(true);
     sfx.fanfare();
     burst(true);
-    void say(tFor(lang, 'gotStickerSay', { n: name, s: sticker[lang] }), lang);
+    void playSequence(phrase(SPOKEN[lang].gotSticker, lang, { s: sticker[lang] }, who));
   };
 
   return (

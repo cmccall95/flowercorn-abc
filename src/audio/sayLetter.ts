@@ -1,14 +1,16 @@
 import type { Lang } from '../content/sets';
 import type { Segment } from './lines';
 import { stopAudio } from './player';
-import { playClip } from './recordings';
-import { cancelSpeech, currentGeneration, speakLine } from './speech';
+import { hasRecording, playClip } from './recordings';
+import { cancelSpeech, currentGeneration, deviceVoiceUsable, speakLine } from './speech';
 import { playVoice } from './voiceClips';
 
-export { drawPrompt, findPrompt, introSequence, nameLine, sequenceText, soundSequence } from './lines';
-export type { Segment } from './lines';
+export { drawPrompt, findPrompt, introSequence, nameLine, phrase, sequenceText, soundSequence } from './lines';
+export type { NameRef, Segment } from './lines';
 
 const PAUSE_MS = 350;
+/** Gap around the child's recorded name inside a phrase. */
+const NAME_GAP_MS = 120;
 
 /** Stop speech and any clip that's playing. */
 export function hush() {
@@ -29,11 +31,22 @@ export function say(text: string, lang: Lang): Promise<void> {
 export async function playSequence(segments: Segment[]): Promise<void> {
   hush();
   const gen = currentGeneration();
+  const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
   for (const [i, seg] of segments.entries()) {
     // A short breath between pieces so joined clips don't run together.
-    if (i > 0) await new Promise((r) => setTimeout(r, PAUSE_MS));
+    if (i > 0) await wait(seg.pause ?? PAUSE_MS);
     if (currentGeneration() !== gen) return;
-    if (seg.kind === 'say') {
+    if (seg.kind === 'phrase') {
+      // Her recorded name, when there is one, keeps every voice the same; otherwise the device voice can say it.
+      const recordedName = seg.parts.some((p) => 'nameKey' in p && hasRecording(p.nameKey));
+      if (!recordedName && deviceVoiceUsable(seg.lang)) { await speakLine(seg.text, seg.lang); continue; }
+      for (const [j, part] of seg.parts.entries()) {
+        if (j > 0) await wait(NAME_GAP_MS);
+        if (currentGeneration() !== gen) return;
+        if ('voice' in part) await playVoice(part.voice.id);
+        else await playClip(part.nameKey);
+      }
+    } else if (seg.kind === 'say') {
       if (!(seg.voice && (await playVoice(seg.voice.id)))) await speakLine(seg.text, seg.lang);
     } else if (!(await playClip(seg.key)) && !(seg.voice && (await playVoice(seg.voice.id)))) {
       await speakLine(seg.fallback, seg.lang);

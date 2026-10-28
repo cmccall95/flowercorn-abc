@@ -1,6 +1,6 @@
 import type { Lang } from './sets';
 
-const CHEERS: Record<Lang, string[]> = {
+export const CHEERS: Record<Lang, string[]> = {
   en: ['Great job, {n}!', 'You did it, {n}!', 'Super star, {n}!', "Yay, {n}! That's right!", 'Wow, {n}! Amazing!', 'High five, {n}!'],
   es: ['¡Muy bien, {n}!', '¡Lo lograste, {n}!', '¡Eres una estrella, {n}!', '¡Sí, {n}! ¡Correcto!', '¡Guau, {n}! ¡Increíble!', '¡Choca esos cinco, {n}!'],
 };

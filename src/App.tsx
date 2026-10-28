@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { loadRecordingKeys } from './audio/recordings';
-import { hush, say } from './audio/sayLetter';
+import { hush, phrase, playSequence } from './audio/sayLetter';
+import { SPOKEN } from './content/phrases';
 import { setSfxVolume } from './audio/sfx';
 import { setVoiceSettings } from './audio/speech';
 import { loadVoiceIndex } from './audio/voiceClips';
@@ -15,7 +16,7 @@ import { ParentCorner } from './screens/parent/ParentCorner';
 import { StickerBook } from './screens/StickerBook';
 import { TraceGame } from './screens/TraceGame';
 import { Welcome } from './screens/Welcome';
-import { spokenNameOf, useActiveProfile, useApp } from './state/store';
+import { useActiveProfile, useApp, whoOf } from './state/store';
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ id: 'welcome' });
@@ -49,7 +50,7 @@ export default function App() {
   useEffect(() => {
     if (!needsBreak.show) return;
     const lang = uiLang(settings.lang);
-    void say(tFor(lang, 'breakSay', { n: spokenNameOf(profile) }), lang);
+    void playSequence(phrase(SPOKEN[lang].breakTime, lang, {}, whoOf(profile)));
   }, [needsBreak.show]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

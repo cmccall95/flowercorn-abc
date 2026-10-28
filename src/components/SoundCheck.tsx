@@ -28,14 +28,20 @@ export function SoundCheck() {
         <Emoji e={icon(h.deviceVoice)} />
         <div>
           <b>This device's voice</b>{' '}
-          {h.deviceVoice === 'ok' ? 'working' : h.deviceVoice === 'failed' ? `not responding (${h.deviceError})` : 'not tested yet'}
-          {' · '}{en} English, {es} Spanish voices
+          {en + es === 0 ? 'none installed in this browser' : h.deviceVoice === 'ok' ? 'working' : h.deviceVoice === 'failed' ? `not responding (${h.deviceError})` : 'not tested yet'}
+          {en + es > 0 && <> · {en} English, {es} Spanish voices</>}
           <div className="muted">
-            Says the cheers with her name. If it's not responding: check the tab isn't muted, pick a voice below without
-            “Google” in its name (those need the internet), or reload the page.
+            {en + es === 0 ? (
+              <>That's OK: everything the game says has its own clip. To hear her name in the cheers, record it in
+                Players → Record name. (On Samsung phones you can also add voices: phone Settings → General management →
+                Text-to-speech output → Preferred engine → Speech Services by Google, then reload.)</>
+            ) : (
+              <>Only used to say her name in cheers when it isn't recorded. If it's not responding: check the tab isn't muted, pick a
+                voice below without “Google” in its name (those need the internet), or reload the page.</>
+            )}
           </div>
         </div>
-        <button className="btn small" onClick={() => void say('Testing, one, two, three!', 'en')}>🔊 Test</button>
+        <button className="btn small" disabled={en + es === 0} onClick={() => void say('Testing, one, two, three!', 'en')}>🔊 Test</button>
       </div>
     </div>
   );

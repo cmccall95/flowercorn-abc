@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { say } from '../audio/sayLetter';
-import { firstCheer } from '../content/cheers';
+import { phrase, playSequence } from '../audio/sayLetter';
+import { CHEERS } from '../content/cheers';
 import { AVATARS } from '../content/friends';
 import type { Profile } from '../state/store';
 import { Emoji } from './Emoji';
 
 /** Grown-up form for a new player (or editing one): name, how the voice should say it, and an animal. */
 export function ProfileSheet({ initial, onSave, onClose }: {
-  initial?: Omit<Profile, 'id'>; onSave: (p: Omit<Profile, 'id'>) => void; onClose: () => void;
+  initial?: Omit<Profile, 'id'> & { id?: string }; onSave: (p: Omit<Profile, 'id'>) => void; onClose: () => void;
 }) {
   const [name, setName] = useState(initial?.name ?? '');
   const [sayAs, setSayAs] = useState(initial?.sayAs ?? '');
@@ -25,7 +25,10 @@ export function ProfileSheet({ initial, onSave, onClose }: {
         <div className="field">
           <label htmlFor="p-say">How to say it (optional)</label>
           <input id="p-say" type="text" value={sayAs} onChange={(e) => setSayAs(e.target.value)} placeholder="Spell it the way it sounds" maxLength={30} autoComplete="off" />
-          <span className="muted">If the voice says her name wrong, spell it the way it sounds, like “Soff-ee-ah”.</span>
+          <span className="muted">
+            If the voice says her name wrong, spell it the way it sounds, like “Soff-ee-ah”. You can also record her name in your own
+            voice: Grown-up corner → Players → Record name.
+          </span>
         </div>
         <div className="field">
           <span className="lbl">Animal</span>
@@ -37,8 +40,8 @@ export function ProfileSheet({ initial, onSave, onClose }: {
         </div>
         <div className="row" style={{ justifyContent: 'space-between' }}>
           <div className="row">
-            <button type="button" className="btn small" disabled={!spoken} onClick={() => void say(firstCheer(spoken, 'en'), 'en')}><Emoji e="🔊" /> Test</button>
-            <button type="button" className="btn small" disabled={!spoken} onClick={() => void say(firstCheer(spoken, 'es'), 'es')}><Emoji e="🔊" /> Prueba</button>
+            <button type="button" className="btn small" disabled={!spoken} onClick={() => void playSequence(phrase(CHEERS.en[0], 'en', {}, { spoken, profileId: initial?.id ?? '' }))}><Emoji e="🔊" /> Test</button>
+            <button type="button" className="btn small" disabled={!spoken} onClick={() => void playSequence(phrase(CHEERS.es[0], 'es', {}, { spoken, profileId: initial?.id ?? '' }))}><Emoji e="🔊" /> Prueba</button>
           </div>
           <div className="row">
             <button type="button" className="btn small" onClick={onClose}>Cancel</button>

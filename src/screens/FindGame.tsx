@@ -1,6 +1,6 @@
 import { motion, useAnimationControls } from 'framer-motion';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { findPrompt, introSequence, nameLine, playSequence, soundSequence } from '../audio/sayLetter';
+import { findPrompt, introSequence, nameLine, phrase, playSequence, soundSequence } from '../audio/sayLetter';
 import { sfx } from '../audio/sfx';
 import { burst, CheerBubble } from '../components/Celebration';
 import { Emoji } from '../components/Emoji';
@@ -17,7 +17,7 @@ import { uiLang, useT } from '../i18n/ui';
 import { itemStats } from '../metrics/analyze';
 import { useMetrics } from '../metrics/store';
 import type { Go } from '../nav';
-import { DEFAULT_PROGRESS, type ProgressKey, spokenNameOf, useActiveProfile, useApp } from '../state/store';
+import { DEFAULT_PROGRESS, type ProgressKey, useActiveProfile, useApp, whoOf } from '../state/store';
 
 const KEY_DEBOUNCE_MS = 350;
 const ADVANCE_MS = 1700;
@@ -45,7 +45,7 @@ export function FindGame({ activity, go }: { activity: ActivityId; go: Go }) {
   const saved = useApp((s) => (s.activeId && s.progress[s.activeId]?.[key]) || DEFAULT_PROGRESS);
   const level: Level = settings.levelMode === 'auto' ? saved.level : settings.levelMode;
   const config = LEVELS[level];
-  const name = spokenNameOf(profile);
+  const who = whoOf(profile);
   const displayName = profile?.name ?? '';
 
   const [step, setStep] = useState(saved.step % items.length);
@@ -145,7 +145,7 @@ export function FindGame({ activity, go }: { activity: ActivityId; go: Go }) {
     setCheerText(line.replace('{n}', displayName));
     sfx.chime();
     burst();
-    void playSequence([{ kind: 'say', text: line.replace('{n}', name), lang: round.lang }, ...nameLine(round.target, round.lang)]);
+    void playSequence([...phrase(line, round.lang, {}, who), ...nameLine(round.target, round.lang)]);
     const stickerDue = useApp.getState().addStar(STICKER_EVERY);
     past.current.push(round.target);
     const next = step + 1;
@@ -279,7 +279,7 @@ export function FindGame({ activity, go }: { activity: ActivityId; go: Go }) {
       <Garden count={stars} />
       <CheerBubble text={cheerText} onDone={() => setCheerText(null)} />
       {reward && profile && (
-        <StickerReveal sticker={reward} name={name} lang={uiLang(settings.lang)}
+        <StickerReveal sticker={reward} who={who} lang={uiLang(settings.lang)}
           onBook={() => { setReward(null); go({ id: 'book' }); }} onDone={closeReward} />
       )}
     </div>

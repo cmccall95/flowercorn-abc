@@ -44,12 +44,12 @@ await page.screenshot({ path: `${OUT}/03-home.png` });
 check((await spoken(page)).some((s) => s.includes('Hi, Lily!')), 'greets her by name');
 
 await page.getByRole('button', { name: /^ABC .*Find/ }).click();
-await page.waitForTimeout(700);
+await page.waitForTimeout(1800);
 await page.screenshot({ path: `${OUT}/04-find-keyboard-start.png` });
-check((await spoken(page)).some((s) => s.includes('Ey! Ey is for Apple.')), 'introduces A in one smooth line');
+check((await spoken(page)).some((s) => s.endsWith('|Ey is for Apple.')), 'introduces A: name, pause, picture word');
 await page.getByRole('button', { name: 'Next' }).click();
-await page.waitForTimeout(300);
-check((await spoken(page)).some((s) => s.includes('B! B is for Butterfly.')), '▶ moves on to B');
+await page.waitForTimeout(1600);
+check((await spoken(page)).some((s) => s.endsWith('|B is for Butterfly.')), '▶ moves on to B');
 await page.getByRole('button', { name: 'Previous' }).click();
 await page.waitForTimeout(300);
 check((await page.textContent('.letter-card'))?.trim() === 'A', '◀ goes back to A');
@@ -72,7 +72,7 @@ await page.screenshot({ path: `${OUT}/05-correct.png` });
 check((await spoken(page)).some((s) => /Lily/.test(s)) && (await spoken(page)).some((s) => /\|Ey!$/.test(s)), 'cheers with her name, then says the letter');
 
 await page.getByRole('button', { name: /Español/ }).click();
-await page.waitForTimeout(300);
+await page.waitForTimeout(1600);
 const es = (await spoken(page)).filter((s) => s.startsWith('es-MX'));
 check(es.some((s) => / de \w+\.$/.test(s)), 'Español button says it in Spanish');
 await page.getByRole('button', { name: /Letter sound/ }).click();
@@ -190,6 +190,30 @@ await phone.waitForTimeout(600);
 await phone.screenshot({ path: `${OUT}/19-phone-find.png` });
 const sw = await phone.evaluate(() => document.documentElement.scrollWidth);
 check(sw <= 390, `no sideways scroll on a phone (${sw}px)`);
+
+// ---------- Samsung-style phone: no device voices at all, so everything must come from clips ----------
+const sam = await browser.newPage({ viewport: { width: 412, height: 915 }, hasTouch: true, isMobile: true });
+sam.on('pageerror', (e) => errors.push(e.message));
+await sam.addInitScript(() => {
+  window.__spoken = [];
+  Object.defineProperty(window, 'speechSynthesis', { value: { getVoices: () => [], speak(u) { window.__spoken.push(u.text); setTimeout(() => u.onerror && u.onerror({ error: 'synthesis-failed' }), 5); }, cancel() {}, resume() {}, addEventListener() {}, removeEventListener() {} } });
+  window.SpeechSynthesisUtterance = class { constructor(t) { this.text = t; } };
+});
+const samClips = [];
+sam.on('request', (r) => { if (r.url().endsWith('.mp3')) samClips.push(r.url().split('/voice/')[1]); });
+await sam.goto(BASE);
+await sam.getByRole('button', { name: /New player/ }).tap();
+await sam.fill('#p-name', 'Lily');
+await sam.getByRole('button', { name: 'Save' }).tap();
+await sam.waitForTimeout(800);
+check(samClips.some((c) => c.startsWith('en/p-')), `greeting plays from clips with no device voice (${samClips.join(', ')})`);
+await sam.getByRole('button', { name: /^ABC .*Find/ }).tap();
+await sam.waitForTimeout(2500);
+check(samClips.some((c) => c.startsWith('en/intro-ua-')) && samClips.some((c) => c.startsWith('en/word-a-')), 'letter A plays name clip, then picture-word clip');
+const before = samClips.length;
+await sam.locator('.choice', { hasText: /^A$/ }).tap({ force: true });
+await sam.waitForTimeout(1500);
+check(samClips.slice(before).some((c) => c.startsWith('en/p-')), 'cheer plays from clips with no device voice');
 
 check(errors.length === 0, `no page errors ${errors.join(' | ')}`);
 await browser.close();

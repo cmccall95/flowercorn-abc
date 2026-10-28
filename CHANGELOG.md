@@ -3,6 +3,18 @@
 Versions are MAJOR.MINOR.PATCH. The version you're running is shown on the first screen and in the
 Grown-up corner, which also says whether a newer one is out.
 
+## [0.7.0] - 2026-10-28
+### Added
+- Works on phones with no built-in voice (many Samsung phones): greetings, cheers, sticker announcements and
+  every other spoken line now have their own clip.
+- **Record name** in Grown-up corner → Players: record her name in your voice and the cheers say it
+  ("Great job, Lily!"). A recorded name is used on every device.
+### Changed
+- Letters are introduced with a one-second pause: "A." … "A is for Apple."
+- Voice clips are slower and clearer.
+- Sound check explains when the browser has no voices, and how to add them on Samsung phones. The speed and pitch
+  sliders are labeled as device-voice only.
+
 ## [0.6.0] - 2026-10-28
 ### Added
 - Version number on the first screen and in the Grown-up corner, with a "you're up to date" check.

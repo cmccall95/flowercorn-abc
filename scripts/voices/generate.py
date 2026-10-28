@@ -18,7 +18,7 @@ from misaki import espeak
 
 REPO = 'hexgrad/Kokoro-82M'
 VOICES = {'en': 'af_heart', 'es': 'ef_dora'}
-SPEED = 0.9
+SPEED = 0.8  # slow and clear for little listeners
 RATE = 24000
 VERSION = 1  # bump to regenerate everything
 

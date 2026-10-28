@@ -37,15 +37,15 @@ export function SettingsPanel() {
     const auto = pickVoice(lang);
     return (
       <div className="field">
-        <label htmlFor={`v-${lang}`}>{lang === 'en' ? 'English voice' : 'Spanish voice'}</label>
+        <label htmlFor={`v-${lang}`}>{lang === 'en' ? 'English device voice' : 'Spanish device voice'}</label>
         <select id={`v-${lang}`} value={s[key]} onChange={(e) => set({ [key]: e.target.value })}>
           <option value="">Auto{auto ? ` (${auto.name})` : ''}</option>
           {pool.map((v) => <option key={v.name} value={v.name}>{v.name} · {v.lang}</option>)}
         </select>
-        <button className="btn small" style={{ alignSelf: 'flex-start' }} onClick={() => void say(`${firstCheer(testName, lang)} ${lang === 'es' ? 'La eme suena mmm.' : 'M says mmm.'}`, lang)}>
+        <button className="btn small" style={{ alignSelf: 'flex-start' }} disabled={!pool.length} onClick={() => void say(`${firstCheer(testName, lang)} ${lang === 'es' ? 'La eme suena mmm.' : 'M says mmm.'}`, lang)}>
           🔊 Test
         </button>
-        {!pool.length && <span className="muted">No {lang === 'en' ? 'English' : 'Spanish'} voices on this device. Add one in the device's language or speech settings.</span>}
+        {!pool.length && <span className="muted">This browser has no {lang === 'en' ? 'English' : 'Spanish'} voices. That's fine: the game's own clips are used. See Sound check above.</span>}
       </div>
     );
   };
@@ -71,9 +71,10 @@ export function SettingsPanel() {
       <div className="panel">{voicePicker('en')}</div>
       <div className="panel">{voicePicker('es')}</div>
       <div className="panel field">
-        <label htmlFor="v-rate">Speaking speed · {s.rate.toFixed(2)}</label>
+        <span className="muted">Device voice only (used for her name when it isn't recorded). The game's own clips are already slow and clear.</span>
+        <label htmlFor="v-rate">Device voice speed · {s.rate.toFixed(2)}</label>
         <input id="v-rate" type="range" min={0.6} max={1.2} step={0.05} value={s.rate} onChange={(e) => set({ rate: +e.target.value })} />
-        <label htmlFor="v-pitch">Pitch (higher sounds brighter) · {s.pitch.toFixed(2)}</label>
+        <label htmlFor="v-pitch">Device voice pitch · {s.pitch.toFixed(2)}</label>
         <input id="v-pitch" type="range" min={0.8} max={1.8} step={0.05} value={s.pitch} onChange={(e) => set({ pitch: +e.target.value })} />
       </div>
       <div className="panel field">

@@ -7,7 +7,7 @@ let known: Set<string> | null = null;
 
 export async function loadRecordingKeys(): Promise<Set<string>> {
   try {
-    known = new Set((await keys()).map(String).filter((k) => k.startsWith('phonic:')));
+    known = new Set((await keys()).map(String).filter((k) => k.startsWith('phonic:') || k.startsWith('name:')));
   } catch {
     known = new Set();
   }

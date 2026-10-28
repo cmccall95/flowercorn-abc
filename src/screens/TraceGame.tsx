@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { drawPrompt, introSequence, nameLine, playSequence } from '../audio/sayLetter';
+import { drawPrompt, introSequence, nameLine, phrase, playSequence } from '../audio/sayLetter';
 import { sfx } from '../audio/sfx';
 import { burst, CheerBubble } from '../components/Celebration';
 import { Emoji } from '../components/Emoji';
@@ -15,7 +15,7 @@ import type { Go } from '../nav';
 import { toPath, type Pt } from '../trace/geometry';
 import { GLYPHS } from '../trace/glyphs';
 import { isDone, startTrace, traceSegment, type TraceState } from '../trace/tracer';
-import { spokenNameOf, useActiveProfile, useApp } from '../state/store';
+import { useActiveProfile, useApp, whoOf } from '../state/store';
 
 const HINT_IDLE_MS = 20_000;
 
@@ -30,7 +30,7 @@ export function TraceGame({ set, go }: { set: ActivityId; go: Go }) {
   const [index, setIndex] = useState(0);
   const item = items[index % items.length];
   const lang: Lang = settings.lang === 'both' ? (index % 2 ? 'es' : 'en') : settings.lang;
-  const name = spokenNameOf(profile);
+  const who = whoOf(profile);
 
   const [trace, setTraceState] = useState<TraceState>(() => startTrace(GLYPHS[item]));
   // Pointer events can arrive faster than React re-renders, so the latest state lives in a ref too.
@@ -89,7 +89,7 @@ export function TraceGame({ set, go }: { set: ActivityId; go: Go }) {
     setCheerText(line.replace('{n}', profile.name));
     sfx.chime();
     burst();
-    void playSequence([{ kind: 'say', text: line.replace('{n}', name), lang }, ...nameLine(item, lang)]);
+    void playSequence([...phrase(line, lang, {}, who), ...nameLine(item, lang)]);
     const due = useApp.getState().addStar(STICKER_EVERY);
     setTimeout(() => {
       trail.current?.replaceChildren();
@@ -157,7 +157,7 @@ export function TraceGame({ set, go }: { set: ActivityId; go: Go }) {
       </div>
       <CheerBubble text={cheerText} onDone={() => setCheerText(null)} />
       {reward && (
-        <StickerReveal sticker={reward} name={name} lang={uiLang(settings.lang)}
+        <StickerReveal sticker={reward} who={who} lang={uiLang(settings.lang)}
           onBook={() => { setReward(null); go({ id: 'book' }); }} onDone={() => { setReward(null); setIndex((i) => i + 1); }} />
       )}
     </div>

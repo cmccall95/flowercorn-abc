@@ -1,5 +1,5 @@
 import type { Lang } from '../content/sets';
-import { reportHealth } from './health';
+import { reportHealth, useAudioHealth } from './health';
 
 export interface VoiceSettings {
   voiceEn: string;
@@ -108,3 +108,6 @@ export function unlockSpeech() {
   u.volume = 0;
   speechSynthesis.speak(u);
 }
+
+/** Whether lines with the child's name can use the device voice (many Samsung phones have no voices at all). */
+export const deviceVoiceUsable = (lang: Lang) => voicesFor(lang).length > 0 && useAudioHealth.getState().deviceVoice !== 'failed';

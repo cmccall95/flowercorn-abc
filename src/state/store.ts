@@ -133,3 +133,5 @@ export const useApp = create<AppState>()(
 
 export const useActiveProfile = () => useApp((s) => s.profiles.find((p) => p.id === s.activeId) ?? null);
 export const spokenNameOf = (p: Profile | null) => (p ? p.sayAs.trim() || p.name : '');
+/** The child as the voice sees her: the name to say, and where her recorded name is kept. */
+export const whoOf = (p: Profile | null) => (p ? { spoken: spokenNameOf(p), profileId: p.id } : undefined);

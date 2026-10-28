@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { say } from '../audio/sayLetter';
+import { phrase, playSequence } from '../audio/sayLetter';
 import { sfx } from '../audio/sfx';
 import { Emoji } from '../components/Emoji';
 import { IconButton, TopBar } from '../components/bits';
@@ -21,7 +21,7 @@ export function StickerBook({ go }: { go: Go }) {
   const tap = (s: Sticker) => {
     sfx.pop();
     setBounce({ id: s.id, n: (bounce?.n ?? 0) + 1 });
-    void say(`${s[lang]}!`, lang);
+    void playSequence(phrase(`${s[lang].charAt(0).toUpperCase()}${s[lang].slice(1)}!`, lang));
   };
 
   return (
@@ -32,7 +32,7 @@ export function StickerBook({ go }: { go: Go }) {
       />
       <div className="book-tabs" role="group" aria-label="Pages">
         {STICKER_PAGES.map((p, i) => (
-          <button key={p.en} className="btn small" aria-pressed={i === page} onClick={() => { sfx.pop(); setPage(i); void say(p[lang], lang); }}>
+          <button key={p.en} className="btn small" aria-pressed={i === page} onClick={() => { sfx.pop(); setPage(i); void playSequence(phrase(`${p[lang]}!`, lang)); }}>
             <Emoji e={p.stickers[0].emoji} /> {p[lang]}
           </button>
         ))}

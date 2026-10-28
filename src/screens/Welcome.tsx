@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { say } from '../audio/sayLetter';
+import { phrase, playSequence } from '../audio/sayLetter';
+import { SPOKEN } from '../content/phrases';
 import { sfx } from '../audio/sfx';
 import { unlockSpeech } from '../audio/speech';
 import { Emoji } from '../components/Emoji';
@@ -8,7 +9,7 @@ import { ProfileSheet } from '../components/ProfileSheet';
 import { VersionTag } from '../components/VersionInfo';
 import { uiLang, useT } from '../i18n/ui';
 import type { Go } from '../nav';
-import { type LangMode, spokenNameOf, useApp } from '../state/store';
+import { type LangMode, useApp, whoOf } from '../state/store';
 
 export function Welcome({ go }: { go: Go }) {
   const t = useT();
@@ -24,13 +25,14 @@ export function Welcome({ go }: { go: Go }) {
     useApp.getState().selectProfile(id);
     const p = useApp.getState().profiles.find((x) => x.id === id)!;
     const l = uiLang(lang);
-    void say(t('hi', { n: spokenNameOf(p) }) + ' ' + t('pickGame'), l);
+    void playSequence(phrase(SPOKEN[l].greet, l, {}, whoOf(p)));
     go({ id: 'home' });
   };
 
   const setLang = (l: LangMode) => {
     useApp.getState().updateSettings({ lang: l });
-    void say(l === 'es' ? '¡Español!' : 'English!', l === 'es' ? 'es' : 'en');
+    const voiceLang = l === 'es' ? 'es' : 'en';
+    void playSequence(phrase(SPOKEN[voiceLang].language, voiceLang));
   };
 
   return (
