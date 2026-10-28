@@ -246,3 +246,11 @@ img.emoji { object-fit: contain; }
   background: var(--card); color: var(--ink); border-radius: 999px; padding: 0.5rem 1.1rem; font-size: 0.95rem; font-weight: 600;
   box-shadow: 0 0.3rem 1rem var(--shadow); max-width: calc(100% - 2rem); text-align: center;
 }
+
+/* ---------- version ---------- */
+.version-tag { display: inline-flex; align-items: center; gap: 0.6rem; color: var(--ink-soft); font-size: 0.9rem; font-weight: 600; }
+.version-status { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.changelog { display: flex; flex-direction: column; gap: 1rem; }
+.changelog h3 { text-transform: none; letter-spacing: 0; font-size: 1.15rem; color: var(--ink); display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: baseline; }
+.changelog ul { margin: 0.3rem 0 0.8rem; padding-left: 1.3rem; line-height: 1.5; }
+.you-are-here { background: var(--p5); color: var(--ink); border-radius: 999px; padding: 0.1rem 0.6rem; font-size: 0.8rem; }

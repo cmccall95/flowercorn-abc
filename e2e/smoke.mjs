@@ -141,6 +141,11 @@ await page.getByRole('tab', { name: /Settings/ }).click();
 const soundCheck = await page.textContent('.settings-grid');
 check(/Sound check/.test(soundCheck) && /This device's voice\s*working/.test(soundCheck), 'Sound check reports the device voice working');
 await page.screenshot({ path: `${OUT}/13-settings.png`, fullPage: true });
+await page.getByRole('tab', { name: /What's new/ }).click();
+await page.screenshot({ path: `${OUT}/14b-whats-new.png`, fullPage: true });
+const news = await page.textContent('.parent');
+check(/Version \d+\.\d+\.\d+/.test(news) && /you're on this one/.test(news), "What's new lists versions and marks the current one");
+check(/You're on the newest version/.test(news), 'says the running version is the newest');
 await page.getByRole('tab', { name: /Record sounds/ }).click();
 await page.screenshot({ path: `${OUT}/14-record.png`, fullPage: true });
 

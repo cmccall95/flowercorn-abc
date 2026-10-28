@@ -5,6 +5,7 @@ import { unlockSpeech } from '../audio/speech';
 import { Emoji } from '../components/Emoji';
 import { ParentGate } from '../components/bits';
 import { ProfileSheet } from '../components/ProfileSheet';
+import { VersionTag } from '../components/VersionInfo';
 import { uiLang, useT } from '../i18n/ui';
 import type { Go } from '../nav';
 import { type LangMode, spokenNameOf, useApp } from '../state/store';
@@ -57,7 +58,10 @@ export function Welcome({ go }: { go: Go }) {
       </div>
       <div className="row" style={{ justifyContent: 'space-between' }}>
         <span className="garden" style={{ fontSize: '2rem' }}><Emoji e="🌷" /><Emoji e="🌼" /><Emoji e="🌸" /><Emoji e="🌻" /><Emoji e="🌺" /></span>
-        <ParentGate label={t('holdForGrownups')} onOpen={() => go({ id: 'parent' })} />
+        <div className="row">
+          <VersionTag />
+          <ParentGate label={t('holdForGrownups')} onOpen={() => go({ id: 'parent' })} />
+        </div>
       </div>
       {adding && (
         <ProfileSheet
