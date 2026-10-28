@@ -1,0 +1,266 @@
+{
+"en/name/a": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/b": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/c": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/d": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/e": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/f": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/g": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/h": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/i": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/j": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/k": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/l": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/m": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/n": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/ny": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/o": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/p": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/q": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/r": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/s": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/t": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/u": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/v": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/w": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/x": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/y": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"en/name/z": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"es/name/a": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter a es es.flac"
+},
+"es/name/b": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter b es es.flac"
+},
+"es/name/c": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"es/name/d": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter d es es.flac"
+},
+"es/name/e": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter e es es.flac"
+},
+"es/name/f": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter f es es.flac"
+},
+"es/name/g": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter g es es.flac"
+},
+"es/name/h": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter h es es.flac"
+},
+"es/name/i": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter i es es.flac"
+},
+"es/name/j": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter j es es.flac"
+},
+"es/name/k": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter k es es.flac"
+},
+"es/name/l": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter l es es.flac"
+},
+"es/name/m": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter m es es.flac"
+},
+"es/name/n": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter n es es.flac"
+},
+"es/name/ny": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter ñ es es.flac"
+},
+"es/name/o": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter o es es.flac"
+},
+"es/name/p": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter p es es.flac"
+},
+"es/name/q": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter q es es.flac"
+},
+"es/name/r": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter r es es.flac"
+},
+"es/name/s": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter s es es.flac"
+},
+"es/name/t": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter t es es.flac"
+},
+"es/name/u": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter u es es.flac"
+},
+"es/name/v": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter v es es.flac"
+},
+"es/name/w": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter w es es.flac"
+},
+"es/name/x": {
+"source": "commons",
+"license": "CC0",
+"credit": "Jynus, Wikimedia Commons (CC0)",
+"file": "Letter x es es.flac"
+},
+"es/name/y": {
+"source": "kokoro",
+"license": "Apache-2.0"
+},
+"es/name/z": {
+"source": "kokoro",
+"license": "Apache-2.0"
+}
+}
