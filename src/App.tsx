@@ -5,6 +5,7 @@ import { SPOKEN } from './content/phrases';
 import { setSfxVolume } from './audio/sfx';
 import { setVoiceSettings } from './audio/speech';
 import { loadVoiceIndex } from './audio/voiceClips';
+import { startEngine } from './audio/engine/engine';
 import { Emoji } from './components/Emoji';
 import { SoundWarning } from './components/SoundCheck';
 import { tFor, uiLang } from './i18n/ui';
@@ -27,6 +28,8 @@ export default function App() {
   const needsBreak = useBreakReminder(playing, settings.breakMinutes);
 
   useEffect(() => { void loadRecordingKeys(); void loadVoiceIndex(); }, []);
+  // The in-app voice loads from this device once it has been downloaded.
+  useEffect(() => { if (settings.engine) startEngine(); }, [settings.engine]);
   useEffect(() => {
     setVoiceSettings({ voiceEn: settings.voiceEn, voiceEs: settings.voiceEs, rate: settings.rate, pitch: settings.pitch });
     setSfxVolume(settings.sfxVolume);

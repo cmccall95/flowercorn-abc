@@ -60,12 +60,18 @@ Pushing to `main` runs lint, tests and the build, then deploys to GitHub Pages.
 
 ### Voice
 
-Letters, phonics sounds and prompts are pre-recorded clips in `public/voice/`, made with
-[Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (Apache-2.0), a free open-source neural voice. English letter
-names use exact phonemes so "A" is always "ay", and Spanish uses Latin American pronunciation. The
-**Generate voice clips** workflow rebuilds only the clips whose wording changed (it runs automatically when
-`src/audio/lines.ts` or `src/content/` changes, or from the Actions tab). Lines that include the child's name use the
-device's own voice, and a grown-up's recordings from the Record sounds page always take priority.
+The game speaks with **Kokoro-82M** (Apache-2.0), a free open-source voice:
+
+- **In the app** (`src/audio/engine/`): Kokoro runs on the device in a web worker (kokoro-js + ONNX Runtime). It
+  downloads once (~90 MB, from Grown-up corner → Settings) and then works offline. English is turned into sounds
+  with espeak-ng; Spanish with our own Latin American rules (`spanish.ts`). Letter names are passed as exact
+  phonemes, and grown-ups can override any letter in **Fix letters**. Everything it makes is saved on the device.
+- **Bundled clips** (`public/voice/`): the same voice, pre-made by the **Generate voice clips** workflow, so the game
+  talks before the in-app voice is downloaded.
+- **Device voice**: the browser's own speech, as a last resort.
+
+The **Check the in-app voice** workflow loads the in-app voice in Chromium, has it say every letter line, listens
+with Whisper and commits `scripts/voices/engine-report.md`.
 
 Art: [Microsoft Fluent Emoji](https://github.com/microsoft/fluentui-emoji) (MIT). Fonts: Andika (made for early
 readers, with the single-story a and g) and Fredoka, both SIL Open Font License.

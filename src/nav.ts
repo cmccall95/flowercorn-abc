@@ -8,6 +8,6 @@ export type Screen =
   | { id: 'book' }
   | { id: 'parent'; tab?: ParentTab };
 
-export type ParentTab = 'settings' | 'dashboard' | 'record' | 'players' | 'news';
+export type ParentTab = 'settings' | 'dashboard' | 'record' | 'players' | 'letters' | 'news';
 
 export type Go = (s: Screen) => void;

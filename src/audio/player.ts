@@ -41,3 +41,22 @@ export async function playBuffer(key: string, load: () => Promise<ArrayBuffer | 
   if (current === src) current = null;
   return true;
 }
+
+/** Play raw samples (from the in-app voice). */
+export async function playSamples(samples: Float32Array, rate: number): Promise<boolean> {
+  const ctx = audio();
+  if (!ctx || !samples.length) return false;
+  const buf = ctx.createBuffer(1, samples.length, rate);
+  buf.copyToChannel(samples, 0);
+  stopAudio();
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  src.connect(ctx.destination);
+  current = src;
+  await new Promise<void>((resolve) => {
+    src.onended = () => resolve();
+    src.start();
+  });
+  if (current === src) current = null;
+  return true;
+}

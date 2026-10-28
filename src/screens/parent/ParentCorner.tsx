@@ -8,11 +8,13 @@ import { Players } from './Players';
 import { RecordSounds } from './RecordSounds';
 import { SettingsPanel } from './SettingsPanel';
 import { WhatsNew } from './WhatsNew';
+import { FixLetters } from './FixLetters';
 import { VersionStatus } from '../../components/VersionInfo';
 
 const TABS: { id: ParentTab; label: string; e: string }[] = [
   { id: 'dashboard', label: 'Dashboard', e: '📊' },
   { id: 'settings', label: 'Settings', e: '⚙️' },
+  { id: 'letters', label: 'Fix letters', e: '🔤' },
   { id: 'record', label: 'Record sounds', e: '🎙️' },
   { id: 'players', label: 'Players', e: '👧' },
   { id: 'news', label: "What's new", e: '✨' },
@@ -39,6 +41,7 @@ export function ParentCorner({ tab = 'dashboard', go }: { tab?: ParentTab; go: G
         {tab === 'record' && <RecordSounds />}
         {tab === 'players' && <Players />}
         {tab === 'news' && <WhatsNew />}
+        {tab === 'letters' && <FixLetters />}
       </div>
     </div>
   );

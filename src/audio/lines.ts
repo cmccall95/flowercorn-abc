@@ -5,6 +5,7 @@ import { SPOKEN } from '../content/phrases';
 import { itemsFor, type Lang } from '../content/sets';
 import { GOLD_STICKERS, STICKER_PAGES, STICKERS } from '../content/stickers';
 import { wordFor } from '../content/words';
+import { type EnginePiece, marker, parsePieces } from './engine/pieces';
 
 /**
  * A fixed line with a bundled Kokoro clip at public/voice/<id>.mp3 (see scripts/voices). The id ends with a
@@ -28,10 +29,10 @@ export type PhrasePart = { voice: VoiceLine } | { nameKey: string; spoken: strin
 
 /** Every segment can ask for a longer pause before it (milliseconds). */
 export type Segment = (
-  /** A line for the device voice; if `voice` has a bundled clip, that plays instead. */
-  | { kind: 'say'; text: string; lang: Lang; voice?: VoiceLine }
-  /** A phonics sound: a grown-up's recording, else the bundled clip, else `fallback` on the device voice. */
-  | { kind: 'clip'; key: string; fallback: string; lang: Lang; voice?: VoiceLine }
+  /** A fixed line: the in-app voice (`engine`), else its bundled clip (`voice`), else the device voice (`text`). */
+  | { kind: 'say'; text: string; lang: Lang; voice?: VoiceLine; engine?: EnginePiece[] }
+  /** A phonics sound: a grown-up's recording, else the in-app voice, else the bundled clip, else the device voice. */
+  | { kind: 'clip'; key: string; fallback: string; lang: Lang; voice?: VoiceLine; engine?: EnginePiece[] }
   /**
    * A line that may include the child's name: bundled clips, with her recorded name slotted in (or the device
    * voice saying it, where there is one). `text` is the whole line, for captions and as a last resort.
@@ -58,7 +59,8 @@ const voiceId = (lang: Lang, base: string, words: string) => `${lang}/${base}-${
 function line(lang: Lang, id: string, build: (name: (item: string) => string, short: (item: string) => string) => string): Segment {
   const text = build((x) => spokenName(x, lang), (x) => shortName(x, lang));
   const voiceText = build((x) => voiceName(x, lang), (x) => voiceShort(x, lang));
-  return { kind: 'say', text, lang, voice: { id: voiceId(lang, id, voiceText), lang, text: voiceText } };
+  const engine = parsePieces(build((x) => marker(x, true), (x) => marker(x, false)));
+  return { kind: 'say', text, lang, voice: { id: voiceId(lang, id, voiceText), lang, text: voiceText }, engine };
 }
 
 function sound(item: string, lang: Lang): Segment {
@@ -66,6 +68,7 @@ function sound(item: string, lang: Lang): Segment {
   return {
     kind: 'clip', key: recordingKey(item, lang), fallback: phonic?.approx ?? '', lang,
     voice: phonic?.ps ? { id: voiceId(lang, `sound-${letterSlug(item)}`, phonic.ps), lang, phonemes: phonic.ps } : undefined,
+    engine: phonic?.ps ? [{ ps: phonic.ps }] : undefined,
   };
 }
 

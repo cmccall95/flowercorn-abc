@@ -3,6 +3,24 @@
 Versions are MAJOR.MINOR.PATCH. The version you're running is shown on the first screen and in the
 Grown-up corner, which also says whether a newer one is out.
 
+- **Patch** (0.9.**1**): fixes and small improvements. This is the normal step.
+- **Minor** (0.**10**.0): a new learning module or a big new capability.
+- **Major** (**1**.0.0): the first version we'd call complete and ready for everyday use.
+
+## [0.9.0] - 2026-10-28
+### Added
+- **In-app voice**: a free, open-source voice (Kokoro) that runs on the device itself, so it works on phones whose
+  browser offers no voices (like many Samsung phones). One-time download of about 90 MB from Grown-up corner →
+  Settings → In-app voice; works offline afterwards. It can say anything, which is what future modules (spelling,
+  pronunciation, math) will build on.
+- Letter names are given to the voice as exact sounds, so "A" is "ay" and never "uh" or "zeh".
+- Spanish is pronounced with Latin American rules ("ce" = "se", "ll" and "y" alike, silent "h").
+- Her name is said by the in-app voice in every cheer when it isn't recorded.
+- **Fix letters** in the Grown-up corner: type how a letter should sound, hear it right away, and save it.
+- Lines are prepared in the background while she plays, so the next letters play without waiting.
+### Changed
+- When the in-app voice is downloaded it is used first; the bundled clips cover the time before that.
+
 ## [0.8.0] - 2026-10-28
 ### Fixed
 - Letter names are checked by listening: for each letter several spellings are tried ("Ay", "A", …), a speech

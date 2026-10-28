@@ -28,6 +28,10 @@ export interface Settings {
   reduceMotion: boolean;
   breakMinutes: 0 | 15 | 30;
   palette: Palette;
+  /** The in-app voice (downloaded once, then works offline). */
+  engine: boolean;
+  /** Grown-up corrections for how a letter's name is said: { en: { C: 'see' } }. */
+  letterFixes: Partial<Record<Lang, Record<string, string>>>;
 }
 
 export interface Progress {
@@ -65,7 +69,7 @@ interface AppState {
 
 export const DEFAULT_SETTINGS: Settings = {
   lang: 'en', input: 'auto', levelMode: 'auto', voiceEn: '', voiceEs: '', rate: 0.9, pitch: 1.25,
-  sfxVolume: 0.8, reduceMotion: false, breakMinutes: 15, palette: 'lavender',
+  sfxVolume: 0.8, reduceMotion: false, breakMinutes: 15, palette: 'lavender', engine: false, letterFixes: {},
 };
 
 export const DEFAULT_PROGRESS: Progress = { level: 1, step: 0, finished: 0 };

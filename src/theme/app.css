@@ -254,3 +254,7 @@ img.emoji { object-fit: contain; }
 .changelog h3 { text-transform: none; letter-spacing: 0; font-size: 1.15rem; color: var(--ink); display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: baseline; }
 .changelog ul { margin: 0.3rem 0 0.8rem; padding-left: 1.3rem; line-height: 1.5; }
 .you-are-here { background: var(--p5); color: var(--ink); border-radius: 999px; padding: 0.1rem 0.6rem; font-size: 0.8rem; }
+
+/* ---------- in-app voice ---------- */
+.progress { height: 0.6rem; border-radius: 999px; background: color-mix(in srgb, var(--ink) 10%, transparent); overflow: hidden; margin: 0.5rem 0; }
+.progress i { display: block; height: 100%; background: var(--p1); border-radius: 999px; transition: width 0.3s; }

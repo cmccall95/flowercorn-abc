@@ -1,6 +1,7 @@
 import { motion, useAnimationControls } from 'framer-motion';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { findPrompt, introSequence, nameLine, phrase, playSequence, soundSequence } from '../audio/sayLetter';
+import { findPrompt, introSequence, nameLine, phrase, playSequence, prepareSequences, soundSequence } from '../audio/sayLetter';
+import { cancelPreparing, useEngine } from '../audio/engine/engine';
 import { sfx } from '../audio/sfx';
 import { burst, CheerBubble } from '../components/Celebration';
 import { Emoji } from '../components/Emoji';
@@ -91,6 +92,17 @@ export function FindGame({ activity, go }: { activity: ActivityId; go: Go }) {
 
   useEffect(() => { startRound(step); /* first round only */ // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, level]);
+
+  // With the in-app voice, get this set's lines ready in the background (next few letters first).
+  const engineReady = useEngine((s) => s.status === 'ready');
+  useEffect(() => {
+    if (!engineReady) return;
+    const order = [...items.slice(step), ...items.slice(0, step)];
+    const lang: Lang = settings.lang === 'es' ? 'es' : 'en';
+    prepareSequences(order.map((x) => [...introSequence(x, lang), ...nameLine(x, lang)]));
+    return cancelPreparing;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [engineReady, items]);
 
   const replay = (lang?: Lang) => {
     if (!round) return;

@@ -18,6 +18,8 @@ const versionFile = (): Plugin => ({
 export default defineConfig({
   base: '/flowercorn-abc/',
   define: { __BUILD__: JSON.stringify(build) },
+  // The in-app voice runs in a module worker (it loads the model and phonemizer on demand).
+  worker: { format: 'es' },
   plugins: [
     react(),
     versionFile(),
@@ -42,7 +44,18 @@ export default defineConfig({
         ],
       },
       // Voice clips are precached too, so every letter still talks offline.
-      workbox: { clientsClaim: true, skipWaiting: true, globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2,mp3,json}'], maximumFileSizeToCacheInBytes: 3_000_000 },
+      workbox: {
+        clientsClaim: true,
+        skipWaiting: true,
+        globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2,mp3,json}'],
+        maximumFileSizeToCacheInBytes: 3_000_000,
+        // The in-app voice's speech runtime (~21 MB) is saved the first time the voice loads, not up front.
+        // (The model itself is kept by the voice library in its own browser cache.)
+        runtimeCaching: [
+          { urlPattern: /\.wasm$/, handler: 'CacheFirst', options: { cacheName: 'voice-runtime', expiration: { maxEntries: 8 } } },
+          { urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/npm\/onnxruntime-web/, handler: 'CacheFirst', options: { cacheName: 'voice-runtime-cdn', expiration: { maxEntries: 8 } } },
+        ],
+      },
     }),
   ],
   test: { environment: 'node' },

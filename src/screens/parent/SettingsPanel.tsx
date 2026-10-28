@@ -3,6 +3,7 @@ import { say } from '../../audio/sayLetter';
 import { pickVoice, voicesFor } from '../../audio/speech';
 import { firstCheer } from '../../content/cheers';
 import { SoundCheck } from '../../components/SoundCheck';
+import { VoiceEngineCard } from '../../components/VoiceEngineCard';
 import type { Lang } from '../../content/sets';
 import { type Settings, spokenNameOf, useActiveProfile, useApp } from '../../state/store';
 
@@ -52,6 +53,7 @@ export function SettingsPanel() {
 
   return (
     <div className="settings-grid">
+      <VoiceEngineCard />
       <SoundCheck />
       <div className="panel field">
         <span className="lbl">Language</span>
