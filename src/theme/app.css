@@ -8,6 +8,7 @@ body {
   font-family: var(--font-display);
   font-size: clamp(16px, 2.2vmin, 22px);
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
   overscroll-behavior: none;
@@ -74,7 +75,7 @@ img.emoji { object-fit: contain; }
 .seg button[aria-pressed='true'] { background: var(--p1); color: white; }
 
 /* ---------- parent gate ---------- */
-.gate { position: relative; border: 0; background: var(--card); border-radius: 999px; padding: 0.5rem 1rem 0.5rem 0.6rem; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; color: var(--ink-soft); box-shadow: 0 0.2rem 0 var(--shadow); touch-action: none; }
+.gate { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; position: relative; border: 0; background: var(--card); border-radius: 999px; padding: 0.5rem 1rem 0.5rem 0.6rem; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; color: var(--ink-soft); box-shadow: 0 0.2rem 0 var(--shadow); touch-action: none; }
 .gate svg { width: 2rem; height: 2rem; }
 .gate circle.track { stroke: color-mix(in srgb, var(--ink) 12%, transparent); }
 .gate circle.fill { stroke: var(--p1); transition: stroke-dashoffset 0.1s linear; }

@@ -40,34 +40,67 @@ export function IconButton({ e, label, onClick }: { e: string; label: string; on
 
 const HOLD_MS = 3000;
 
-/** Grown-ups only: the button has to be held for 3 seconds, which little hands rarely do by accident. */
+/**
+ * Grown-ups only: the button has to be held for 3 seconds, which little hands rarely do by accident.
+ * Only lifting the finger (or mouse) stops the hold: iPad Safari can cancel a long touch for its own
+ * gestures, so cancel events are ignored and the release is watched on the whole window.
+ */
 export function ParentGate({ label, onOpen }: { label: string; onOpen: () => void }) {
   const [progress, setProgress] = useState(0);
-  const timer = useRef<number | null>(null);
+  const [hint, setHint] = useState(false);
+  const holding = useRef(false);
   const started = useRef(0);
+  const interval = useRef<number>();
+  const hintTimer = useRef<number>();
 
-  const stop = () => {
-    if (timer.current) cancelAnimationFrame(timer.current);
-    timer.current = null;
+  const release = () => {
+    if (!holding.current) return;
+    holding.current = false;
+    clearInterval(interval.current);
     setProgress(0);
+    setHint(true);
+    clearTimeout(hintTimer.current);
+    hintTimer.current = window.setTimeout(() => setHint(false), 2500);
   };
-  const tick = () => {
-    const p = Math.min(1, (performance.now() - started.current) / HOLD_MS);
-    setProgress(p);
-    if (p >= 1) { stop(); onOpen(); return; }
-    timer.current = requestAnimationFrame(tick);
+
+  const press = (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    if (holding.current) return;
+    holding.current = true;
+    started.current = performance.now();
+    setHint(false);
+    clearInterval(interval.current);
+    interval.current = window.setInterval(() => {
+      const p = Math.min(1, (performance.now() - started.current) / HOLD_MS);
+      setProgress(p);
+      if (p >= 1) {
+        holding.current = false;
+        clearInterval(interval.current);
+        setProgress(0);
+        onOpen();
+      }
+    }, 50);
   };
-  useEffect(() => stop, []);
+
+  useEffect(() => {
+    const ends = ['pointerup', 'mouseup', 'touchend'] as const;
+    ends.forEach((t) => window.addEventListener(t, release));
+    return () => {
+      ends.forEach((t) => window.removeEventListener(t, release));
+      clearInterval(interval.current);
+      clearTimeout(hintTimer.current);
+    };
+  }, []);
 
   const r = 14;
   const c = 2 * Math.PI * r;
+  const secondsLeft = Math.ceil(((1 - progress) * HOLD_MS) / 1000);
   return (
     <button
       className="gate"
       aria-label={`${label} 3 seconds`}
-      onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); started.current = performance.now(); tick(); }}
-      onPointerUp={stop}
-      onPointerCancel={stop}
+      onPointerDown={press}
+      onTouchStart={press}
       onKeyDown={(e) => { if (e.key === 'Enter' && e.shiftKey) onOpen(); }}
       onContextMenu={(e) => e.preventDefault()}
     >
@@ -76,7 +109,7 @@ export function ParentGate({ label, onOpen }: { label: string; onOpen: () => voi
         <circle className="fill" cx="18" cy="18" r={r} fill="none" strokeWidth="4" strokeDasharray={c} strokeDashoffset={c * (1 - progress)} transform="rotate(-90 18 18)" strokeLinecap="round" />
         <text x="18" y="23" textAnchor="middle" fontSize="14">⚙</text>
       </svg>
-      {label}
+      {progress > 0 ? `Keep holding… ${secondsLeft}` : hint ? 'Hold for 3 seconds' : label}
     </button>
   );
 }
