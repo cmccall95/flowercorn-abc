@@ -5,6 +5,7 @@ import { setSfxVolume } from './audio/sfx';
 import { setVoiceSettings } from './audio/speech';
 import { loadVoiceIndex } from './audio/voiceClips';
 import { Emoji } from './components/Emoji';
+import { SoundWarning } from './components/SoundCheck';
 import { tFor, uiLang } from './i18n/ui';
 import { useSessionTimer } from './metrics/store';
 import type { Go, Screen } from './nav';
@@ -59,6 +60,7 @@ export default function App() {
       {screen.id === 'trace' && <TraceGame key={screen.set} set={screen.set} go={go} />}
       {screen.id === 'book' && <StickerBook go={go} />}
       {screen.id === 'parent' && <ParentCorner tab={screen.tab} go={go} />}
+      {playing && <SoundWarning />}
       {needsBreak.show && playing && (
         <div className="overlay modal">
           <div className="reveal">

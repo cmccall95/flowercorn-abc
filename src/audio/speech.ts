@@ -1,4 +1,5 @@
 import type { Lang } from '../content/sets';
+import { reportHealth } from './health';
 
 export interface VoiceSettings {
   voiceEn: string;
@@ -44,19 +45,52 @@ export function cancelSpeech() {
 
 export const currentGeneration = () => generation;
 
-/** Say one line. Resolves when finished (or right away if speech isn't available). */
+/** How long the device voice gets to start talking before we treat it as stuck. */
+const START_TIMEOUT_MS = 2500;
+
+/**
+ * Say one line. Resolves when finished (or right away if speech isn't available). Chrome's speech can silently
+ * get stuck, especially with Google's online voices, so: if a line errors or doesn't start, it's retried once
+ * with a voice that lives on the device, and the result is reported to the Sound check.
+ */
 export function speakLine(text: string, lang: Lang): Promise<void> {
-  if (!supported() || !text) return Promise.resolve();
+  if (!supported() || !text.trim()) return Promise.resolve();
+  const chosen = pickVoice(lang, lang === 'es' ? settings.voiceEs : settings.voiceEn);
+  return attempt(text, lang, chosen).then((ok) => {
+    if (ok || !chosen || chosen.localService) return;
+    const local = voicesFor(lang).find((v) => v.localService);
+    if (local) return attempt(text, lang, local).then(() => undefined);
+  });
+}
+
+function attempt(text: string, lang: Lang, voice: SpeechSynthesisVoice | null): Promise<boolean> {
   return new Promise((resolve) => {
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang === 'es' ? 'es-MX' : 'en-US';
-    const v = pickVoice(lang, lang === 'es' ? settings.voiceEs : settings.voiceEn);
-    if (v) u.voice = v;
+    u.lang = voice?.lang ?? (lang === 'es' ? 'es-MX' : 'en-US');
+    if (voice) u.voice = voice;
     u.rate = settings.rate;
     u.pitch = settings.pitch;
-    // Some browsers never fire onend; the timer keeps sequences from stalling.
-    const timer = setTimeout(resolve, 1500 + text.length * 120);
-    u.onend = u.onerror = () => { clearTimeout(timer); resolve(); };
+    let started = false;
+    const finish = (ok: boolean, error = '') => {
+      clearTimeout(startTimer);
+      clearTimeout(endTimer);
+      if (ok) reportHealth({ deviceVoice: 'ok', deviceError: '' });
+      else if (error !== 'interrupted' && error !== 'canceled') reportHealth({ deviceVoice: 'failed', deviceError: error || 'did not start' });
+      resolve(ok);
+    };
+    // Stuck engine: nothing started in time.
+    const startTimer = setTimeout(() => {
+      if (started) return;
+      speechSynthesis.cancel();
+      finish(false);
+    }, START_TIMEOUT_MS);
+    // Some browsers never fire onend; this keeps sequences moving.
+    const endTimer = setTimeout(() => finish(true), START_TIMEOUT_MS + 1500 + text.length * 120);
+    u.onstart = () => { started = true; };
+    u.onend = () => finish(true);
+    u.onerror = (e) => finish(false, e.error);
+    // Chrome can be left paused after a cancel; resuming is harmless otherwise.
+    speechSynthesis.resume();
     speechSynthesis.speak(u);
   });
 }
@@ -67,10 +101,10 @@ export function speak(text: string, lang: Lang): Promise<void> {
   return speakLine(text, lang);
 }
 
-/** iOS only allows speech after a tap; saying an empty utterance inside the first tap unlocks it. */
+/** iPad and iPhone only allow speech after a tap; saying a silent word inside the first tap unlocks it. */
 export function unlockSpeech() {
-  if (!supported()) return;
-  const u = new SpeechSynthesisUtterance(' ');
+  if (!supported() || !/iPad|iPhone|iPod/.test(navigator.userAgent) && !(navigator.maxTouchPoints > 1 && /Mac/.test(navigator.userAgent))) return;
+  const u = new SpeechSynthesisUtterance('hi');
   u.volume = 0;
   speechSynthesis.speak(u);
 }

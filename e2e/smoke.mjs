@@ -13,8 +13,8 @@ const stubSpeech = () => {
   const fake = {
     speaking: false, pending: false, paused: false,
     getVoices: () => [{ name: 'Test EN', lang: 'en-US' }, { name: 'Test ES', lang: 'es-MX' }],
-    speak(u) { window.__spoken.push({ text: u.text, lang: u.lang }); setTimeout(() => u.onend && u.onend(), 5); },
-    cancel() {}, addEventListener() {}, removeEventListener() {},
+    speak(u) { window.__spoken.push({ text: u.text, lang: u.lang }); setTimeout(() => { u.onstart && u.onstart(); u.onend && u.onend(); }, 5); },
+    cancel() {}, resume() {}, addEventListener() {}, removeEventListener() {},
   };
   Object.defineProperty(window, 'speechSynthesis', { value: fake });
   window.SpeechSynthesisUtterance = class { constructor(t) { this.text = t; } };
@@ -32,7 +32,7 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 page.on('pageerror', (e) => errors.push(e.message));
 await page.addInitScript(stubSpeech);
 // Laptop run: no bundled clips, so every line goes through the (stubbed) device voice and can be checked as text.
-await page.route('**/voice/index.json', (r) => r.fulfill({ json: {} }));
+await page.route(/\/voice\/index\.json/, (r) => r.fulfill({ json: {} }));
 await page.goto(BASE);
 await page.screenshot({ path: `${OUT}/01-welcome-empty.png` });
 await page.getByRole('button', { name: /New player/ }).click();
@@ -138,6 +138,8 @@ await page.screenshot({ path: `${OUT}/12-dashboard.png`, fullPage: true });
 const dash = await page.textContent('.parent');
 check(/answers/.test(dash) && /Needs practice/.test(dash), 'dashboard shows stats');
 await page.getByRole('tab', { name: /Settings/ }).click();
+const soundCheck = await page.textContent('.settings-grid');
+check(/Sound check/.test(soundCheck) && /This device's voice\s*working/.test(soundCheck), 'Sound check reports the device voice working');
 await page.screenshot({ path: `${OUT}/13-settings.png`, fullPage: true });
 await page.getByRole('tab', { name: /Record sounds/ }).click();
 await page.screenshot({ path: `${OUT}/14-record.png`, fullPage: true });

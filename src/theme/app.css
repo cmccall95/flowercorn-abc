@@ -236,3 +236,13 @@ img.emoji { object-fit: contain; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition: none !important; }
 }
+
+/* ---------- sound check ---------- */
+.check-row { display: flex; align-items: center; gap: 0.9rem; padding: 0.6rem 0; border-top: 1px solid color-mix(in srgb, var(--ink) 8%, transparent); }
+.check-row > div { flex: 1; min-width: 0; }
+.check-row > .emoji, .check-row > .emoji-text { font-size: 1.6rem; flex: 0 0 auto; }
+.sound-warning {
+  position: fixed; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top, 0px) + 5.4rem); z-index: 30;
+  background: var(--card); color: var(--ink); border-radius: 999px; padding: 0.5rem 1.1rem; font-size: 0.95rem; font-weight: 600;
+  box-shadow: 0 0.3rem 1rem var(--shadow); max-width: calc(100% - 2rem); text-align: center;
+}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { say } from '../../audio/sayLetter';
 import { pickVoice, voicesFor } from '../../audio/speech';
 import { firstCheer } from '../../content/cheers';
+import { SoundCheck } from '../../components/SoundCheck';
 import type { Lang } from '../../content/sets';
 import { type Settings, spokenNameOf, useActiveProfile, useApp } from '../../state/store';
 
@@ -51,6 +52,7 @@ export function SettingsPanel() {
 
   return (
     <div className="settings-grid">
+      <SoundCheck />
       <div className="panel field">
         <span className="lbl">Language</span>
         <Seg value={s.lang} options={[['en', 'English'], ['es', 'Español'], ['both', 'Both (voice alternates)']]} onChange={(lang) => set({ lang })} />
