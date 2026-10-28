@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { introSequence, playSequence, say } from '../audio/sayLetter';
+import { drawPrompt, introSequence, nameLine, playSequence } from '../audio/sayLetter';
 import { sfx } from '../audio/sfx';
 import { burst, CheerBubble } from '../components/Celebration';
 import { Emoji } from '../components/Emoji';
@@ -7,7 +7,6 @@ import { IconButton, TopBar } from '../components/bits';
 import { StickerReveal } from '../components/StickerReveal';
 import { cheer } from '../content/cheers';
 import { FRIENDS } from '../content/friends';
-import { isNumber, shortName, spokenName } from '../content/names';
 import { type ActivityId, itemsFor, type Lang } from '../content/sets';
 import { pickSticker, STICKER_EVERY, type Sticker } from '../content/stickers';
 import { tFor, uiLang, useT } from '../i18n/ui';
@@ -58,8 +57,7 @@ export function TraceGame({ set, go }: { set: ActivityId; go: Go }) {
     trail.current?.replaceChildren();
     shownAt.current = Date.now();
     resetIdle();
-    const x = spokenName(item, lang);
-    void say(tFor(lang, 'letsDraw', { x: lang === 'es' ? `${isNumber(item) ? 'el' : 'la'} ${x}` : x }), lang);
+    void playSequence(drawPrompt(item, lang));
     return () => clearTimeout(idleTimer.current);
      
   }, [item, lang]);
@@ -91,7 +89,7 @@ export function TraceGame({ set, go }: { set: ActivityId; go: Go }) {
     setCheerText(line.replace('{n}', profile.name));
     sfx.chime();
     burst();
-    void say(`${line.replace('{n}', name)} ${shortName(item, lang)}!`, lang);
+    void playSequence([{ kind: 'say', text: line.replace('{n}', name), lang }, ...nameLine(item, lang)]);
     const due = useApp.getState().addStar(STICKER_EVERY);
     setTimeout(() => {
       trail.current?.replaceChildren();

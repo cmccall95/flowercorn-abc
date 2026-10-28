@@ -24,7 +24,8 @@ export default defineConfig({
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
-      workbox: { globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2}'] },
+      // Voice clips are precached too, so every letter still talks offline.
+      workbox: { globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2,mp3,json}'], maximumFileSizeToCacheInBytes: 3_000_000 },
     }),
   ],
   test: { environment: 'node' },

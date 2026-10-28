@@ -25,3 +25,4 @@ dist-ssr
 
 # Smoke test screenshots
 e2e/shots
+scripts/voices/manifest.json

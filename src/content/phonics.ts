@@ -3,29 +3,33 @@ import type { Lang } from './sets';
 export interface Phonic {
   /** Shown to grown-ups and in the speech bubble, e.g. "/k/". Empty for silent letters. */
   ipa: string;
-  /** What the browser voice says until a grown-up records the real sound. */
+  /** What the device voice says if there's no recording and no bundled clip. */
   approx: string;
+  /** Phonemes for the bundled Kokoro clip: stops get a light schwa, sounds you can hold are held. */
+  ps: string;
 }
 
-const p = (ipa: string, approx: string): Phonic => ({ ipa, approx });
+const p = (ipa: string, approx: string, ps: string): Phonic => ({ ipa, approx, ps });
 
 /** One teaching sound per letter. English uses short vowels and hard C/G; Spanish uses pure vowels and hard C/G/R. */
 export const PHONICS: Record<Lang, Record<string, Phonic>> = {
   en: {
-    A: p('/a/', 'ah'), B: p('/b/', 'buh'), C: p('/k/', 'kuh'), D: p('/d/', 'duh'), E: p('/e/', 'eh'),
-    F: p('/f/', 'fff'), G: p('/g/', 'guh'), H: p('/h/', 'huh'), I: p('/i/', 'ih'), J: p('/j/', 'juh'),
-    K: p('/k/', 'kuh'), L: p('/l/', 'lll'), M: p('/m/', 'mmm'), N: p('/n/', 'nnn'), O: p('/o/', 'aw'),
-    P: p('/p/', 'puh'), Q: p('/kw/', 'kwuh'), R: p('/r/', 'rrr'), S: p('/s/', 'sss'), T: p('/t/', 'tuh'),
-    U: p('/u/', 'uh'), V: p('/v/', 'vvv'), W: p('/w/', 'wuh'), X: p('/ks/', 'ks'), Y: p('/y/', 'yuh'),
-    Z: p('/z/', 'zzz'), Ñ: p('/ny/', 'nyah'),
+    A: p('/a/', 'ah', 'ˈæ'), B: p('/b/', 'buh', 'bə'), C: p('/k/', 'kuh', 'kə'), D: p('/d/', 'duh', 'də'),
+    E: p('/e/', 'eh', 'ˈɛ'), F: p('/f/', 'fff', 'fff'), G: p('/g/', 'guh', 'ɡə'), H: p('/h/', 'huh', 'hə'),
+    I: p('/i/', 'ih', 'ˈɪ'), J: p('/j/', 'juh', 'ʤə'), K: p('/k/', 'kuh', 'kə'), L: p('/l/', 'lll', 'lll'),
+    M: p('/m/', 'mmm', 'mmm'), N: p('/n/', 'nnn', 'nnn'), O: p('/o/', 'aw', 'ˈɑ'), P: p('/p/', 'puh', 'pə'),
+    Q: p('/kw/', 'kwuh', 'kwə'), R: p('/r/', 'rrr', 'ɹɹɹ'), S: p('/s/', 'sss', 'sss'), T: p('/t/', 'tuh', 'tə'),
+    U: p('/u/', 'uh', 'ˈʌ'), V: p('/v/', 'vvv', 'vvv'), W: p('/w/', 'wuh', 'wə'), X: p('/ks/', 'ks', 'ks'),
+    Y: p('/y/', 'yuh', 'jə'), Z: p('/z/', 'zzz', 'zzz'), Ñ: p('/ny/', 'nyah', 'njɑ'),
   },
   es: {
-    A: p('/a/', 'a'), B: p('/b/', 'ba'), C: p('/k/', 'ca'), D: p('/d/', 'da'), E: p('/e/', 'e'),
-    F: p('/f/', 'fff'), G: p('/g/', 'ga'), H: p('', ''), I: p('/i/', 'i'), J: p('/x/', 'ja'),
-    K: p('/k/', 'ca'), L: p('/l/', 'lll'), M: p('/m/', 'mmm'), N: p('/n/', 'nnn'), Ñ: p('/ɲ/', 'ña'),
-    O: p('/o/', 'o'), P: p('/p/', 'pa'), Q: p('/k/', 'cu'), R: p('/r/', 'rrr'), S: p('/s/', 'sss'),
-    T: p('/t/', 'ta'), U: p('/u/', 'u'), V: p('/b/', 'va'), W: p('/w/', 'gua'), X: p('/ks/', 'ks'),
-    Y: p('/ʝ/', 'ya'), Z: p('/s/', 'sss'),
+    A: p('/a/', 'a', 'a'), B: p('/b/', 'ba', 'ba'), C: p('/k/', 'ca', 'ka'), D: p('/d/', 'da', 'da'),
+    E: p('/e/', 'e', 'e'), F: p('/f/', 'fff', 'fff'), G: p('/g/', 'ga', 'ɡa'), H: p('', '', ''),
+    I: p('/i/', 'i', 'i'), J: p('/x/', 'ja', 'xa'), K: p('/k/', 'ca', 'ka'), L: p('/l/', 'lll', 'lll'),
+    M: p('/m/', 'mmm', 'mmm'), N: p('/n/', 'nnn', 'nnn'), Ñ: p('/ɲ/', 'ña', 'ɲa'), O: p('/o/', 'o', 'o'),
+    P: p('/p/', 'pa', 'pa'), Q: p('/k/', 'cu', 'ku'), R: p('/r/', 'rrr', 'rrr'), S: p('/s/', 'sss', 'sss'),
+    T: p('/t/', 'ta', 'ta'), U: p('/u/', 'u', 'u'), V: p('/b/', 'va', 'ba'), W: p('/w/', 'gua', 'wa'),
+    X: p('/ks/', 'ks', 'ks'), Y: p('/ʝ/', 'ya', 'ʝa'), Z: p('/s/', 'sss', 'sss'),
   },
 };
 

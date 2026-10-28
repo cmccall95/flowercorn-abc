@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { loadRecordingKeys } from './audio/recordings';
-import { say } from './audio/sayLetter';
+import { hush, say } from './audio/sayLetter';
 import { setSfxVolume } from './audio/sfx';
-import { cancelSpeech, setVoiceSettings } from './audio/speech';
+import { setVoiceSettings } from './audio/speech';
+import { loadVoiceIndex } from './audio/voiceClips';
 import { Emoji } from './components/Emoji';
 import { tFor, uiLang } from './i18n/ui';
 import { useSessionTimer } from './metrics/store';
@@ -23,7 +24,7 @@ export default function App() {
   useSessionTimer(playing ? profile?.id ?? null : null);
   const needsBreak = useBreakReminder(playing, settings.breakMinutes);
 
-  useEffect(() => { void loadRecordingKeys(); }, []);
+  useEffect(() => { void loadRecordingKeys(); void loadVoiceIndex(); }, []);
   useEffect(() => {
     setVoiceSettings({ voiceEn: settings.voiceEn, voiceEs: settings.voiceEs, rate: settings.rate, pitch: settings.pitch });
     setSfxVolume(settings.sfxVolume);
@@ -33,13 +34,13 @@ export default function App() {
   }, [settings]);
   // Stop talking when the tab is hidden.
   useEffect(() => {
-    const onHide = () => { if (document.hidden) cancelSpeech(); };
+    const onHide = () => { if (document.hidden) hush(); };
     document.addEventListener('visibilitychange', onHide);
     return () => document.removeEventListener('visibilitychange', onHide);
   }, []);
 
   const go: Go = (s) => {
-    cancelSpeech();
+    hush();
     if ((s.id === 'home' || s.id === 'find' || s.id === 'trace' || s.id === 'book') && !useApp.getState().activeId) s = { id: 'welcome' };
     setScreen(s);
   };

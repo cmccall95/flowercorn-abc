@@ -44,17 +44,17 @@ check((await spoken(page)).some((s) => s.includes('Hi, Lily!')), 'greets her by 
 await page.getByRole('button', { name: /^ABC .*Find/ }).click();
 await page.waitForTimeout(700);
 await page.screenshot({ path: `${OUT}/04-find-keyboard-start.png` });
-check((await spoken(page)).some((s) => s.includes('Ay! Ay says')), 'sounds out A: name then phonics');
+check((await spoken(page)).some((s) => s.includes('Ey! Ey says')), 'sounds out A: name then phonics');
 
 await page.keyboard.press('b');
 await page.waitForTimeout(400);
-check((await spoken(page)).some((s) => s.includes('Find ay!')), 'wrong key asks again gently');
+check((await spoken(page)).some((s) => s.includes('Find ey!')), 'wrong key asks again gently');
 // After a key press on a laptop, the keyboard prompt replaces bubbles.
 check(await page.locator('.prompt-row').isVisible(), 'shows the keyboard prompt after a key press');
 await page.keyboard.press('a');
 await page.waitForTimeout(400);
 await page.screenshot({ path: `${OUT}/05-correct.png` });
-check((await spoken(page)).some((s) => /Lily/.test(s) && /ay!$/.test(s)), 'cheers with her name');
+check((await spoken(page)).some((s) => /Lily/.test(s)) && (await spoken(page)).some((s) => /\|Ey!$/.test(s)), 'cheers with her name, then says the letter');
 
 await page.getByRole('button', { name: /Español/ }).click();
 await page.waitForTimeout(300);
@@ -85,6 +85,7 @@ check(owned?.startsWith('1 /'), `sticker is still there after reload (${owned})`
 await page.getByRole('button', { name: 'Home' }).click();
 await page.getByRole('button', { name: /^ABC .*Trace/ }).click();
 await page.waitForTimeout(400);
+const beforeTrace = (await spoken(page)).length;
 await page.screenshot({ path: `${OUT}/09-trace-start.png` });
 const box = await page.locator('.trace-pad').boundingBox();
 const toScreen = ([x, y]) => [box.x + (x / 100) * box.width, box.y + (y / 140) * box.height];
@@ -102,7 +103,8 @@ for (const [i, stroke] of A.entries()) {
 }
 await page.waitForTimeout(300);
 await page.screenshot({ path: `${OUT}/11-trace-done.png` });
-check((await spoken(page)).some((s) => /Lily/.test(s) && /Ay!$/i.test(s)), 'tracing A gets a cheer');
+const afterTrace = (await spoken(page)).slice(beforeTrace);
+check(afterTrace.some((s) => /Lily/.test(s)) && afterTrace.some((s) => /\|Ey!$/.test(s)), `tracing A gets a cheer (${afterTrace.join(' / ')})`);
 
 // ---------- grown-up dashboard ----------
 await page.getByRole('button', { name: 'Home' }).click();

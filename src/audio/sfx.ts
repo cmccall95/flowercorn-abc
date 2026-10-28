@@ -4,7 +4,8 @@ let volume = 0.8;
 
 export const setSfxVolume = (v: number) => { volume = v; };
 
-function audio(): AudioContext | null {
+/** The shared audio context; created and resumed on demand (it starts working after the first tap). */
+export function audio(): AudioContext | null {
   try {
     ctx ??= new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     if (ctx.state === 'suspended') void ctx.resume();

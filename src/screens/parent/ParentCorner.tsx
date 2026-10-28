@@ -1,4 +1,4 @@
-import { cancelSpeech } from '../../audio/speech';
+import { hush } from '../../audio/sayLetter';
 import { Emoji } from '../../components/Emoji';
 import { IconButton, TopBar } from '../../components/bits';
 import type { Go, ParentTab } from '../../nav';
@@ -21,7 +21,7 @@ export function ParentCorner({ tab = 'dashboard', go }: { tab?: ParentTab; go: G
     <div className="scene plain">
       <div className="parent">
         <TopBar
-          left={<><IconButton e="⬅️" label="Back to the game" onClick={() => { cancelSpeech(); go({ id: hasPlayer ? 'home' : 'welcome' }); }} /><span className="title">Grown-up corner</span></>}
+          left={<><IconButton e="⬅️" label="Back to the game" onClick={() => { hush(); go({ id: hasPlayer ? 'home' : 'welcome' }); }} /><span className="title">Grown-up corner</span></>}
         />
         <nav className="tabs" role="tablist">
           {TABS.map((x) => (

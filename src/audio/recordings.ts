@@ -1,4 +1,5 @@
 import { del, get, keys, set } from 'idb-keyval';
+import { forget, playBuffer } from './player';
 
 // Grown-up recordings of phonics sounds live in IndexedDB: localStorage is too small for audio.
 const cache = new Map<string, Blob | null>();
@@ -29,34 +30,19 @@ export async function getRecording(key: string): Promise<Blob | null> {
 export async function saveRecording(key: string, blob: Blob) {
   await set(key, blob);
   cache.set(key, blob);
+  forget(`rec:${key}`);
   (known ??= new Set()).add(key);
 }
 
 export async function deleteRecording(key: string) {
   await del(key);
   cache.delete(key);
+  forget(`rec:${key}`);
   known?.delete(key);
 }
 
-let current: HTMLAudioElement | null = null;
-
-export function stopClip() {
-  current?.pause();
-  current = null;
-}
-
-/** Play a recorded clip; resolves when it ends. */
+/** Play a recorded clip; resolves true when it ends, false if there's no recording. */
 export async function playClip(key: string): Promise<boolean> {
-  const blob = await getRecording(key);
-  if (!blob) return false;
-  stopClip();
-  const url = URL.createObjectURL(blob);
-  const el = new Audio(url);
-  current = el;
-  await new Promise<void>((resolve) => {
-    const done = () => { URL.revokeObjectURL(url); resolve(); };
-    el.onended = el.onerror = done;
-    el.play().catch(done);
-  });
-  return true;
+  if (!hasRecording(key)) return false;
+  return playBuffer(`rec:${key}`, async () => (await getRecording(key))?.arrayBuffer() ?? null);
 }

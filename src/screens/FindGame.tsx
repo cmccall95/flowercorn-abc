@@ -1,6 +1,6 @@
 import { motion, useAnimationControls } from 'framer-motion';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { findPrompt, introSequence, playSequence, say } from '../audio/sayLetter';
+import { findPrompt, introSequence, nameLine, playSequence } from '../audio/sayLetter';
 import { sfx } from '../audio/sfx';
 import { burst, CheerBubble } from '../components/Celebration';
 import { Emoji } from '../components/Emoji';
@@ -8,7 +8,7 @@ import { Garden, IconButton, TopBar } from '../components/bits';
 import { StickerReveal } from '../components/StickerReveal';
 import { cheer } from '../content/cheers';
 import { FRIENDS } from '../content/friends';
-import { isNumber, shortName } from '../content/names';
+import { isNumber } from '../content/names';
 import { isSilent, phonicFor } from '../content/phonics';
 import { type ActivityId, itemsFor, type Lang } from '../content/sets';
 import { GOLD_STICKERS, pickSticker, STICKER_EVERY, type Sticker } from '../content/stickers';
@@ -84,7 +84,7 @@ export function FindGame({ activity, go }: { activity: ActivityId; go: Go }) {
     hinted.current = false;
     busy.current = false;
     if (LEVELS[level].showCard) void playSequence(introSequence(target, lang));
-    else void say(findPrompt(target, lang), lang);
+    else void playSequence(findPrompt(target, lang));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, level, trouble, history, settings.lang]);
 
@@ -116,7 +116,7 @@ export function FindGame({ activity, go }: { activity: ActivityId; go: Go }) {
     setCheerText(line.replace('{n}', displayName));
     sfx.chime();
     burst();
-    void say(`${line.replace('{n}', name)} ${shortName(round.target, round.lang)}!`, round.lang);
+    void playSequence([{ kind: 'say', text: line.replace('{n}', name), lang: round.lang }, ...nameLine(round.target, round.lang)]);
     const stickerDue = useApp.getState().addStar(STICKER_EVERY);
     const next = step + 1;
     const setDone = next >= items.length;
@@ -144,7 +144,7 @@ export function FindGame({ activity, go }: { activity: ActivityId; go: Go }) {
     if (m >= HINT_AFTER_MISSES) hinted.current = true;
     sfx.boop();
     void cardControls.start({ rotate: [0, -8, 7, -4, 0], transition: { duration: 0.45 } });
-    void say(findPrompt(round.target, round.lang), round.lang);
+    void playSequence(findPrompt(round.target, round.lang));
   };
 
   const answer = (picked: string) => {
