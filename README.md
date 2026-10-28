@@ -58,5 +58,14 @@ Pushing to `main` runs lint, tests and the build, then deploys to GitHub Pages.
 | `src/screens/` | Welcome, Home, Find, Trace, Sticker book, Grown-up corner |
 | `scripts/gen-emoji.mjs` | Bundles the Fluent Emoji art used in `src/` (runs before dev/build) |
 
+### Voice
+
+Letters, phonics sounds and prompts are pre-recorded clips in `public/voice/`, made with
+[Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (Apache-2.0), a free open-source neural voice. English letter
+names use exact phonemes so "A" is always "ay", and Spanish uses Latin American pronunciation. The
+**Generate voice clips** workflow rebuilds only the clips whose wording changed (it runs automatically when
+`src/audio/lines.ts` or `src/content/` changes, or from the Actions tab). Lines that include the child's name use the
+device's own voice, and a grown-up's recordings from the Record sounds page always take priority.
+
 Art: [Microsoft Fluent Emoji](https://github.com/microsoft/fluentui-emoji) (MIT). Fonts: Andika (made for early
 readers, with the single-story a and g) and Fredoka, both SIL Open Font License.
