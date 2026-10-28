@@ -25,6 +25,15 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: kokoro-onnx-q8-v1
+      # The in-app voice's files are hosted with the site, so phones load them from us.
+      - run: pip install huggingface_hub && python scripts/voices/fetch_model.py public/models
       - run: npm run lint
       - run: npm test
       - run: npm run build

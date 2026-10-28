@@ -16,6 +16,21 @@ export type FromWorker =
   | { type: 'error'; id: number; message: string };
 
 const MODEL = 'onnx-community/Kokoro-82M-v1.0-ONNX';
+// The voice files are hosted with the app (scripts/voices/fetch_model.py), so phones never contact another site.
+const MODELS = new URL(`${import.meta.env.BASE_URL}models/`, self.location.origin).href;
+
+/**
+ * kokoro-js looks for each voice's style file in its "kokoro-voices" cache under its Hugging Face address before
+ * downloading it; filling that cache from our own copy keeps everything on our site.
+ */
+async function provideVoice(name: string) {
+  const official = `https://huggingface.co/${MODEL}/resolve/main/voices/${name}.bin`;
+  const cache = await caches.open('kokoro-voices');
+  if (await cache.match(official)) return;
+  const res = await fetch(`${MODELS}${MODEL}/voices/${name}.bin`);
+  if (!res.ok) throw new Error(`voice file ${name} (${res.status})`);
+  await cache.put(official, res);
+}
 const VOICE: Record<Lang, string> = { en: 'af_heart', es: 'ef_dora' };
 
 type Tts = Awaited<ReturnType<typeof import('kokoro-js').KokoroTTS.from_pretrained>>;
@@ -24,7 +39,11 @@ const post = (m: FromWorker, transfer: Transferable[] = []) => (self as unknown 
 
 function load(): Promise<Tts> {
   tts ??= (async () => {
-    const { KokoroTTS } = await import('kokoro-js');
+    const [{ KokoroTTS }, { env }] = await Promise.all([import('kokoro-js'), import('@huggingface/transformers')]);
+    env.allowRemoteModels = false;
+    env.allowLocalModels = true;
+    env.localModelPath = MODELS;
+    await Promise.all(Object.values(VOICE).map(provideVoice));
     const files = new Map<string, { loaded: number; total: number }>();
     return KokoroTTS.from_pretrained(MODEL, {
       dtype: 'q8',

@@ -26,3 +26,6 @@ dist-ssr
 # Smoke test screenshots
 e2e/shots
 scripts/voices/manifest.json
+
+# In-app voice model, downloaded at deploy time (scripts/voices/fetch_model.py)
+public/models

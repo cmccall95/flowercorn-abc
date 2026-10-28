@@ -7,6 +7,11 @@ Grown-up corner, which also says whether a newer one is out.
 - **Minor** (0.**10**.0): a new learning module or a big new capability.
 - **Major** (**1**.0.0): the first version we'd call complete and ready for everyday use.
 
+## [0.9.1] - 2026-10-28
+### Fixed
+- The in-app voice's files are now hosted with the app instead of downloaded from Hugging Face, which was refusing
+  the download. Phones only ever talk to the app's own site.
+
 ## [0.9.0] - 2026-10-28
 ### Added
 - **In-app voice**: a free, open-source voice (Kokoro) that runs on the device itself, so it works on phones whose

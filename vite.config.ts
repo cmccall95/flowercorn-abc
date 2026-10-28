@@ -52,6 +52,7 @@ export default defineConfig({
         // The in-app voice's speech runtime (~21 MB) is saved the first time the voice loads, not up front.
         // (The model itself is kept by the voice library in its own browser cache.)
         runtimeCaching: [
+          { urlPattern: /\/models\/.*\.(onnx|bin)$/, handler: 'CacheFirst', options: { cacheName: 'voice-model', expiration: { maxEntries: 8 } } },
           { urlPattern: /\.wasm$/, handler: 'CacheFirst', options: { cacheName: 'voice-runtime', expiration: { maxEntries: 8 } } },
           { urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/npm\/onnxruntime-web/, handler: 'CacheFirst', options: { cacheName: 'voice-runtime-cdn', expiration: { maxEntries: 8 } } },
         ],
