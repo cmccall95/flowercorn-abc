@@ -58,7 +58,17 @@ Pushing to `main` runs lint, tests and the build, then deploys to GitHub Pages.
 | `src/screens/` | Welcome, Home, Find, Trace, Sticker book, Grown-up corner |
 | `scripts/gen-emoji.mjs` | Bundles the Fluent Emoji art used in `src/` (runs before dev/build) |
 
+### Hosting and the server
+
+The game and its API run together on **DigitalOcean App Platform** (`.do/app.yaml`): the game as a static site,
+and `server/` as a small Node service at `/api`. The server signs grown-ups in and makes speech with ElevenLabs;
+the ElevenLabs key is an encrypted App Platform secret and never reaches the browser. See
+[server/README.md](server/README.md) for the security details, settings, and how to add an account.
+
 ### Voice
+
+When signed in, the game's main voice is **ElevenLabs**, reading whole sentences. The voices below are the
+fallbacks (offline, or not signed in).
 
 Voices garble very short lines, and a single letter is the shortest line there is. So **letter names and phonics
 sounds are separate clips**, joined to short phrases of words with a 200 ms gap ("A" · "is for Apple."). Each one

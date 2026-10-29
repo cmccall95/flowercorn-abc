@@ -181,7 +181,7 @@ img.emoji { object-fit: contain; }
 .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1rem; }
 .field { display: flex; flex-direction: column; gap: 0.45rem; }
 .field label, .field .lbl { font-weight: 600; font-size: 0.85rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.07em; }
-.field select, .field input[type='text'] { font: 500 1rem var(--font-display); color: var(--ink); padding: 0.55rem 0.7rem; border-radius: 0.7rem; border: 2px solid color-mix(in srgb, var(--ink) 16%, transparent); background: var(--bg); width: 100%; }
+.field select, .field input[type='text'], .field input[type='email'], .field input[type='password'] { font: 500 1rem var(--font-display); color: var(--ink); padding: 0.55rem 0.7rem; border-radius: 0.7rem; border: 2px solid color-mix(in srgb, var(--ink) 16%, transparent); background: var(--bg); width: 100%; }
 .field input[type='range'] { width: 100%; accent-color: var(--p1); }
 .field .seg button { padding: 0.4rem 0.8rem; font-size: 0.95rem; }
 .check { display: flex; align-items: center; gap: 0.6rem; font-weight: 500; }

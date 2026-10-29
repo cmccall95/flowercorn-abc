@@ -14,9 +14,12 @@ const versionFile = (): Plugin => ({
   },
 });
 
-// Served from https://cmccall95.github.io/flowercorn-abc/
+// Served at the site root on DigitalOcean (with the API at /api); GitHub Pages builds set BASE_PATH=/flowercorn-abc/.
 export default defineConfig({
-  base: '/flowercorn-abc/',
+  base: process.env.BASE_PATH || '/',
+  // Local development: run the API with `cd server && npm run dev`, and the game talks to it here.
+  server: { proxy: { '/api': 'http://localhost:8080' } },
+  preview: { proxy: { '/api': 'http://localhost:8080' } },
   define: { __BUILD__: JSON.stringify(build) },
   // The in-app voice runs in a module worker (it loads the model and phonemizer on demand).
   worker: { format: 'es' },
@@ -46,6 +49,8 @@ export default defineConfig({
       // Voice clips are precached too, so every letter still talks offline.
       workbox: {
         clientsClaim: true,
+        // Sign-in and speech always go to the server, never to the offline copy.
+        navigateFallbackDenylist: [/^\/api\//],
         skipWaiting: true,
         globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2,mp3,json}'],
         maximumFileSizeToCacheInBytes: 3_000_000,
@@ -59,5 +64,5 @@ export default defineConfig({
       },
     }),
   ],
-  test: { environment: 'node' },
+  test: { environment: 'node', include: ['src/**/*.test.ts', 'server/src/**/*.test.ts'] },
 });

@@ -1,14 +1,14 @@
 import type { Lang } from '../content/sets';
 import type { Segment } from './lines';
-import { stopAudio } from './player';
+import { playBuffer, playSamples, stopAudio } from './player';
+import { cloudAudio, cloudReady, prefetchCloud } from './cloud';
 import { hasRecording, playClip } from './recordings';
 import { cancelSpeech, currentGeneration, deviceVoiceMaybe, speakLine } from './speech';
 import { letterClipInfo, playLetterClip, playVoice } from './voiceClips';
 import { normalize, secondCopy } from './carrier';
-import { letterNameKey } from './lines';
+import { letterNameKey, type SentencePiece, wholeText } from './lines';
 import { spokenName } from '../content/names';
 import { engineAudio, engineReady, prepare } from './engine/engine';
-import { playSamples } from './player';
 import { type EnginePart, type LetterFixes, letterPart, resolvePieces } from './engine/pieces';
 import { useApp } from '../state/store';
 
@@ -51,6 +51,8 @@ export function letterSource(item: string, lang: Lang): LetterSource {
 
 /**
  * Play segments in order, each with the best voice available. A newer call (or hush) stops this one between steps.
+ *   Signed in:    the cloud voice reads each whole sentence (her name included), unless a grown-up recorded a
+ *                 letter or her name in it; then the pieces below are used.
  *   Words:        the in-app voice, its bundled clip, the device voice.
  *   Letter names: a grown-up's recording, a bundled recording (unless a grown-up typed a fix), the in-app voice
  *                 saying it twice and keeping the second copy, the device voice.
@@ -70,10 +72,26 @@ export async function playSequence(segments: Segment[]): Promise<void> {
     const clip = (keepSecond && secondCopy(audio.samples, audio.rate)) || audio.samples;
     return playSamples(normalize(clip, audio.rate), audio.rate);
   };
-  for (const [i, seg] of segments.entries()) {
+  // The cloud voice (ElevenLabs, when signed in): whole sentences in one natural read.
+  const viaCloud = async (text: string, lang: Lang) => {
+    if (!cloudReady()) return false;
+    const audio = await cloudAudio(text, lang);
+    if (currentGeneration() !== gen) return true;
+    return !!audio && (await playBuffer(`cloud:${lang}:${text}`, async () => audio));
+  };
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i];
     // A short breath between pieces so joined clips don't run together.
     if (i > 0) await wait(seg.pause ?? PAUSE_MS);
     if (currentGeneration() !== gen) return;
+    // A grown-up's recording of a letter wins over the cloud voice, so those sentences stay in pieces.
+    const recorded = (p: SentencePiece) => typeof p !== 'string' && hasRecording(letterNameKey(p.letter, seg.lang));
+    if (seg.whole && !seg.whole.pieces.some(recorded) && (await viaCloud(wholeText(seg.whole.pieces, seg.lang, fixes()), seg.lang))) {
+      i += seg.whole.size - 1;
+      continue;
+    }
+    if (seg.kind === 'phrase' && !seg.parts.some((p) => 'nameKey' in p && hasRecording(p.nameKey)) && (await viaCloud(seg.text, seg.lang))) continue;
+    if (seg.kind === 'say' && (await viaCloud(seg.text, seg.lang))) continue;
     if (seg.kind === 'phrase') {
       // Bundled clips for the words; her name from a grown-up's recording, the in-app voice, or the device voice.
       for (const [j, part] of seg.parts.entries()) {
@@ -105,6 +123,14 @@ export async function playSequence(segments: Segment[]): Promise<void> {
 
 /** Make the in-app voice's audio for these lines in the background, so they play instantly when needed. */
 export function prepareSequences(sequences: Segment[][]) {
+  const fixes0 = useApp.getState().settings.letterFixes;
+  if (cloudReady()) {
+    // Only the next few lines: each new one costs speech credits, and she may not get that far.
+    prefetchCloud(sequences.slice(0, 3).flat().flatMap((seg) =>
+      seg.whole ? [{ text: wholeText(seg.whole.pieces, seg.lang, fixes0), lang: seg.lang }]
+        : seg.kind === 'say' || seg.kind === 'phrase' ? [{ text: seg.text, lang: seg.lang }] : []));
+    return;
+  }
   if (!engineReady()) return;
   const fixes = useApp.getState().settings.letterFixes;
   prepare(sequences.flat().flatMap((seg) => {

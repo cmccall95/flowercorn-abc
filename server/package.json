@@ -1,0 +1,19 @@
+{
+  "name": "flowercorn-api",
+  "private": true,
+  "type": "module",
+  "description": "Sign-in and speech for FlowerCorn Land (ElevenLabs behind a login).",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "start": "node dist/index.js",
+    "add-user": "node dist/add-user.js",
+    "dev": "tsc -p . && INSECURE_COOKIES=1 ALLOWED_ORIGINS=http://localhost:5173 node --env-file-if-exists=.env dist/index.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "~5.6.3"
+  }
+}

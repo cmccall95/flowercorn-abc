@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LETTER_GAP_MS, allVoiceLines, drawPrompt, findPrompt, introSequence, nameLine, phrase, type Segment, sequenceText, soundSequence } from './lines';
+import { LETTER_GAP_MS, wholeText, allVoiceLines, drawPrompt, findPrompt, introSequence, nameLine, phrase, type Segment, sequenceText, soundSequence } from './lines';
 
 const voiceOf = (seg: Segment) => (seg.kind === 'say' || seg.kind === 'clip' ? seg.voice : undefined);
 /** A sequence as pieces: letters as [X], word clips as their text, pauses as | when they're long. */
@@ -98,7 +98,7 @@ describe('prompts', () => {
     expect(shape(findPrompt('d', 'en'))).toEqual(['Can you find little', '[D]']);
     expect(shape(findPrompt('D', 'es'))).toEqual(['¿Puedes encontrar la', '[D]']);
     expect(sequenceText(findPrompt('7', 'es'))).toBe('¡Busca el siete!');
-    expect(shape(drawPrompt('b', 'es'))).toEqual(['Vamos a dibujar la', '[B]', 'minúscula.']);
+    expect(shape(drawPrompt('b', 'es'))).toEqual(['¡Vamos a dibujar la', '[B]', 'minúscula!']);
     expect(shape(drawPrompt('B', 'en'))).toEqual(["Let's draw the letter", '[B]']);
     expect(shape(nameLine('w', 'en'))).toEqual(['[W]']);
   });
@@ -152,5 +152,29 @@ describe('allVoiceLines', () => {
 
   it('has text or phonemes for every line', () => {
     for (const l of lines) expect(!!(l.text || l.phonemes), l.id).toBe(true);
+  });
+});
+
+describe('whole sentences for the cloud voice', () => {
+  const whole = (segs: Segment[], lang: 'en' | 'es') => segs.filter((s) => s.whole).map((s) => wholeText(s.whole!.pieces, lang));
+
+  it('reads each sentence in one go, letters included', () => {
+    expect(whole(introSequence('B', 'en'), 'en')).toEqual(['B.', 'B is for Butterfly.']);
+    expect(whole(introSequence('b', 'en'), 'en')).toEqual(['Here is little B.', 'B is for Butterfly.']);
+    expect(whole(introSequence('b', 'es'), 'es')).toEqual(['Esta es la be minúscula.', 'Be de Ballena.']);
+    expect(whole(findPrompt('d', 'es'), 'es')).toEqual(['¿Puedes encontrar la de minúscula?']);
+    expect(whole(findPrompt('D', 'en'), 'en')).toEqual(['Can you find D?']);
+    expect(whole(drawPrompt('D', 'es'), 'es')).toEqual(['¡Vamos a dibujar la de!']);
+    expect(whole(soundSequence('C', 'en'), 'en')).toEqual(['The letter C says…']);
+    expect(whole(introSequence('Ñ', 'en'), 'en')).toEqual(['Enye.', 'Enye is a Spanish letter.']);
+  });
+
+  it('knows how many pieces each sentence replaces', () => {
+    const seq = introSequence('b', 'es');
+    expect(seq.filter((s) => s.whole).map((s) => s.whole!.size)).toEqual([3, 2]);
+  });
+
+  it("uses a grown-up's spelling fix", () => {
+    expect(wholeText([{ letter: 'Z' }, 'is for Zebra.'], 'en', { en: { Z: 'zee' } })).toBe('Zee is for Zebra.');
   });
 });

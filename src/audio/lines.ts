@@ -27,7 +27,13 @@ export interface NameRef {
 
 export type PhrasePart = { voice: VoiceLine } | { nameKey: string; spoken: string };
 
-/** Every segment can ask for a longer pause before it (milliseconds). */
+/** A whole sentence for the cloud voice: words, and letters (named when it's spoken, so a grown-up's fix applies). */
+export type SentencePiece = string | { letter: string };
+
+/**
+ * Every segment can ask for a longer pause before it (milliseconds). The first segment of a sentence built from
+ * pieces carries the `whole` sentence, so a voice that reads letters well can say it in one go and skip the rest.
+ */
 export type Segment = (
   /** A fixed line: the in-app voice (`engine`), else its bundled clip (`voice`), else the device voice (`text`). */
   | { kind: 'say'; text: string; lang: Lang; voice?: VoiceLine; engine?: EnginePiece[] }
@@ -46,7 +52,7 @@ export type Segment = (
    * voice saying it, where there is one). `text` is the whole line, for captions and as a last resort.
    */
   | { kind: 'phrase'; text: string; lang: Lang; parts: PhrasePart[] }
-) & { pause?: number };
+) & { pause?: number; whole?: { pieces: SentencePiece[]; size: number } };
 
 export const nameRecordingKey = (profileId: string) => `name:${profileId}`;
 /** A grown-up's recording of a letter's name (shared by both cases). */
@@ -73,7 +79,7 @@ function line(lang: Lang, id: string, text: string): Segment {
 /** Gap between a letter's clip and the words around it: "A" · "is for Apple." */
 export const LETTER_GAP_MS = 200;
 
-type Piece = string | { letter: string };
+type Piece = SentencePiece;
 const L = (item: string): Piece => ({ letter: item.toUpperCase() });
 
 /**
@@ -81,14 +87,26 @@ const L = (item: string): Piece => ({ letter: item.toUpperCase() });
  * or the in-app voice saying it twice and keeping the second), joined to short phrases of words with a small
  * gap. Voices garble very short lines, so the phrases are kept to a few words where possible.
  */
-function sentence(lang: Lang, pieces: Piece[]): Segment[] {
+function sentence(lang: Lang, pieces: Piece[], end = '.'): Segment[] {
+  const last = pieces[pieces.length - 1];
+  const whole = { pieces: typeof last === 'string' && /[.!?]$/.test(last) ? pieces : [...pieces, end], size: pieces.length };
   return pieces.map((p, i): Segment => {
     const seg: Segment = typeof p === 'string' ? line(lang, 'f', p) : { kind: 'letter', item: p.letter, lang };
-    return i > 0 ? { ...seg, pause: LETTER_GAP_MS } : seg;
+    return i > 0 ? { ...seg, pause: LETTER_GAP_MS } : { ...seg, whole };
   });
 }
 
 const withPause = (segs: Segment[], pause: number): Segment[] => segs.map((s, i) => (i === 0 ? { ...s, pause } : s));
+
+/** A sentence's text for the cloud voice. English letters stay as capitals ("B"); Spanish ones are named ("be"). */
+export function wholeText(pieces: SentencePiece[], lang: Lang, fixes: Partial<Record<Lang, Record<string, string>>> = {}): string {
+  return pieces.map((p) => {
+    if (typeof p === 'string') return p;
+    const fix = fixes[lang]?.[p.letter];
+    if (fix) return fix;
+    return lang === 'es' || p.letter === 'Ñ' ? spokenName(p.letter, lang) : p.letter;
+  }).join(' ').replace(/\s+([.!?,…])/g, '$1').replace(/^(\p{L})/u, (c) => c.toUpperCase());
+}
 
 function sound(item: string, lang: Lang): Segment {
   const phonic = phonicFor(item, lang);
@@ -130,27 +148,27 @@ export function introSequence(item: string, lang: Lang): Segment[] {
 export function soundSequence(item: string, lang: Lang): Segment[] {
   if (isNumber(item)) return introSequence(item, lang);
   if (isSilent(item, lang)) return [line(lang, `says-${letterSlug(item)}`, 'La hache no suena. ¡Shhh!')];
-  const lead = lang === 'es' ? sentence(lang, ['La letra', L(item), 'suena']) : sentence(lang, ['The letter', L(item), 'says']);
+  const lead = lang === 'es' ? sentence(lang, ['La letra', L(item), 'suena'], '…') : sentence(lang, ['The letter', L(item), 'says'], '…');
   return [...lead, sound(item, lang), sound(item, lang)];
 }
 
 /** The short spoken prompt after a wrong answer: "Can you find C?" / "¿Puedes encontrar la ce?" */
 export function findPrompt(item: string, lang: Lang): Segment[] {
   if (isNumber(item)) return [line(lang, `find-${slug(item)}`, lang === 'es' ? `¡Busca el ${spokenName(item, lang)}!` : `Find ${spokenName(item, lang)}!`)];
-  if (lang === 'es') return sentence(lang, isLower(item) ? ['¿Puedes encontrar la', L(item), 'minúscula?'] : ['¿Puedes encontrar la', L(item)]);
-  return sentence(lang, [isLower(item) ? 'Can you find little' : 'Can you find', L(item)]);
+  if (lang === 'es') return sentence(lang, isLower(item) ? ['¿Puedes encontrar la', L(item), 'minúscula?'] : ['¿Puedes encontrar la', L(item)], '?');
+  return sentence(lang, [isLower(item) ? 'Can you find little' : 'Can you find', L(item)], '?');
 }
 
 /** "Let's draw the letter A!" / "¡Vamos a dibujar la a!" */
 export function drawPrompt(item: string, lang: Lang): Segment[] {
   if (isNumber(item)) return [line(lang, `draw-${slug(item)}`, lang === 'es' ? `¡Vamos a dibujar el ${spokenName(item, lang)}!` : `Let's draw ${spokenName(item, lang)}!`)];
-  if (lang === 'es') return sentence(lang, isLower(item) ? ['Vamos a dibujar la', L(item), 'minúscula.'] : ['Vamos a dibujar la', L(item)]);
-  return sentence(lang, [isLower(item) ? "Let's draw little" : "Let's draw the letter", L(item)]);
+  if (lang === 'es') return sentence(lang, isLower(item) ? ['¡Vamos a dibujar la', L(item), 'minúscula!'] : ['¡Vamos a dibujar la', L(item)], '!');
+  return sentence(lang, [isLower(item) ? "Let's draw little" : "Let's draw the letter", L(item)], '!');
 }
 
 /** Just the name, said after a cheer: "A!" / "¡A!" */
 export const nameLine = (item: string, lang: Lang): Segment[] =>
-  isNumber(item) ? [line(lang, `name-${slug(item)}`, lang === 'es' ? `¡${cap(spokenName(item, lang))}!` : `${cap(spokenName(item, lang))}!`)] : sentence(lang, [L(item)]);
+  isNumber(item) ? [line(lang, `name-${slug(item)}`, lang === 'es' ? `¡${cap(spokenName(item, lang))}!` : `${cap(spokenName(item, lang))}!`)] : sentence(lang, [L(item)], '!');
 
 /** Clean up the words around a name: "! Pick a game!" → "Pick a game!", ", you got…" → "You got…". */
 function tidy(piece: string, lang: Lang, afterName: boolean): string {

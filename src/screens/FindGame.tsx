@@ -1,5 +1,6 @@
 import { motion, useAnimationControls } from 'framer-motion';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useAccount } from '../audio/cloud';
 import { findPrompt, introSequence, nameLine, phrase, playSequence, prepareSequences, soundSequence } from '../audio/sayLetter';
 import { cancelPreparing, useEngine } from '../audio/engine/engine';
 import { sfx } from '../audio/sfx';
@@ -93,16 +94,18 @@ export function FindGame({ activity, go }: { activity: ActivityId; go: Go }) {
   useEffect(() => { startRound(step); /* first round only */ // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, level]);
 
-  // With the in-app voice, get this set's lines ready in the background (next few letters first).
+  // Get the next lines ready in the background: the cloud voice fetches the next few letters, the in-app voice
+  // makes the whole set (next few letters first).
   const engineReady = useEngine((s) => s.status === 'ready');
+  const cloudIn = useAccount((s) => s.status === 'in');
   useEffect(() => {
-    if (!engineReady) return;
+    if (!engineReady && !cloudIn) return;
     const order = [...items.slice(step), ...items.slice(0, step)];
     const lang: Lang = settings.lang === 'es' ? 'es' : 'en';
     prepareSequences(order.map((x) => [...introSequence(x, lang), ...nameLine(x, lang)]));
     return cancelPreparing;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [engineReady, items]);
+  }, [engineReady, cloudIn, items, step]);
 
   const replay = (lang?: Lang) => {
     if (!round) return;

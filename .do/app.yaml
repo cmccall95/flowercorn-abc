@@ -1,0 +1,65 @@
+# DigitalOcean App Platform: the game (static site, free) and its API (small Node service) at one address.
+# Create with: doctl apps create --spec .do/app.yaml   (or in the control panel: Create App → from this repo)
+# Secrets marked SECRET are set in the control panel (Settings → the component → Environment Variables → Encrypt);
+# their values never go in this file or the repo.
+name: flowercorn
+region: nyc
+ingress:
+  rules:
+    - component:
+        name: api
+        preserve_path_prefix: true
+      match:
+        path:
+          prefix: /api
+    - component:
+        name: web
+      match:
+        path:
+          prefix: /
+static_sites:
+  - name: web
+    github:
+      repo: cmccall95/flowercorn-abc
+      branch: main
+      deploy_on_push: true
+    source_dir: /
+    build_command: npm run build:do
+    output_dir: dist
+    catchall_document: index.html
+services:
+  - name: api
+    github:
+      repo: cmccall95/flowercorn-abc
+      branch: main
+      deploy_on_push: true
+    source_dir: server
+    build_command: npm run build
+    run_command: npm start
+    http_port: 8080
+    instance_count: 1  # one instance: sign-in limits and the speech budget are kept in memory
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    health_check:
+      http_path: /api/health
+    envs:
+      - key: SESSION_SECRET  # 64 random characters; changing it signs everyone out
+        scope: RUN_TIME
+        type: SECRET
+      - key: USERS  # {"email":"scrypt$…"} from `npm run add-user`; never plain passwords
+        scope: RUN_TIME
+        type: SECRET
+      - key: ELEVENLABS_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: ELEVEN_VOICE_EN
+        scope: RUN_TIME
+        value: CHANGE_ME
+      - key: ELEVEN_VOICE_ES
+        scope: RUN_TIME
+        value: CHANGE_ME
+      - key: ELEVEN_MODEL
+        scope: RUN_TIME
+        value: eleven_multilingual_v2
+      - key: DAILY_CHARS_PER_USER
+        scope: RUN_TIME
+        value: "20000"

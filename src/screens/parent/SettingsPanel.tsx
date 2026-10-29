@@ -4,6 +4,7 @@ import { pickVoice, voicesFor } from '../../audio/speech';
 import { firstCheer } from '../../content/cheers';
 import { SoundCheck } from '../../components/SoundCheck';
 import { VoiceEngineCard } from '../../components/VoiceEngineCard';
+import { signOut, useAccount } from '../../audio/cloud';
 import type { Lang } from '../../content/sets';
 import { type Settings, spokenNameOf, useActiveProfile, useApp } from '../../state/store';
 
@@ -53,6 +54,7 @@ export function SettingsPanel() {
 
   return (
     <div className="settings-grid">
+      <AccountCard />
       <VoiceEngineCard />
       <SoundCheck />
       <div className="panel field">
@@ -92,6 +94,20 @@ export function SettingsPanel() {
         <span className="lbl">Colors</span>
         <Seg value={s.palette} options={[['lavender', 'Lavender Dream'], ['blossom', 'Blossom Pink'], ['sherbet', 'Rainbow Sherbet']]} onChange={(palette) => set({ palette })} />
       </div>
+    </div>
+  );
+}
+
+/** Who's signed in. The game's main voice comes from our server, and only for signed-in accounts. */
+function AccountCard() {
+  const { status, email } = useAccount();
+  if (status === 'none') return null;
+  return (
+    <div className="panel field">
+      <span className="lbl">Account</span>
+      {status === 'in' && <span>Signed in as <b>{email}</b>. The game's voice comes from the server and is saved on this device as it plays.</span>}
+      {status === 'offline' && <span className="muted">Offline: lines already heard on this device still play; new ones use the backup voices.</span>}
+      {status === 'in' && <button className="btn small" style={{ alignSelf: 'flex-start' }} onClick={() => void signOut()}>Sign out</button>}
     </div>
   );
 }

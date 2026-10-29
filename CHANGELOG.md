@@ -7,6 +7,18 @@ Grown-up corner, which also says whether a newer one is out.
 - **Minor** (0.**10**.0): a new learning module or a big new capability.
 - **Major** (**1**.0.0): the first version we'd call complete and ready for everyday use.
 
+## [0.11.0] - 2026-10-29
+### Added
+- **ElevenLabs voice through our own server.** The game now reads whole sentences in one natural voice ("B is
+  for Butterfly.", "Great job, Lily!"), with her name in them. Each line is fetched once and saved on the device, so
+  it plays instantly and offline after that. Your own recordings of a letter or her name still come first.
+- **Sign-in.** Grown-ups sign in once per device with an email and password set up for the family. The voice
+  service's key stays on the server, and only signed-in accounts can use it (with daily limits).
+- Grown-up corner → Settings shows who's signed in, with Sign out.
+- The app can now be hosted on DigitalOcean App Platform (game and server at one address).
+### Changed
+- When not signed in, or offline with nothing saved, the earlier voices are used as before.
+
 ## [0.10.0] - 2026-10-28
 ### Changed
 - **Letters are recordings first.** A letter's name is now its own short clip, joined to the words around it

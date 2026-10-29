@@ -17,6 +17,8 @@ import { ParentCorner } from './screens/parent/ParentCorner';
 import { StickerBook } from './screens/StickerBook';
 import { TraceGame } from './screens/TraceGame';
 import { Welcome } from './screens/Welcome';
+import { SignIn } from './screens/SignIn';
+import { checkAccount, useAccount } from './audio/cloud';
 import { useActiveProfile, useApp, whoOf } from './state/store';
 
 export default function App() {
@@ -27,7 +29,8 @@ export default function App() {
   useSessionTimer(playing ? profile?.id ?? null : null);
   const needsBreak = useBreakReminder(playing, settings.breakMinutes);
 
-  useEffect(() => { void loadRecordingKeys(); void loadVoiceIndex(); void loadLetterIndex(); }, []);
+  useEffect(() => { void checkAccount(); void loadRecordingKeys(); void loadVoiceIndex(); void loadLetterIndex(); }, []);
+  const account = useAccount((s) => s.status);
   // The in-app voice loads from this device once it has been downloaded.
   useEffect(() => { if (settings.engine) startEngine(); }, [settings.engine]);
   useEffect(() => {
@@ -55,6 +58,10 @@ export default function App() {
     const lang = uiLang(settings.lang);
     void playSequence(phrase(SPOKEN[lang].breakTime, lang, {}, whoOf(profile)));
   }, [needsBreak.show]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Signing in is needed when the server can be reached; offline, the game plays with what's saved on the device.
+  if (account === 'checking') return <div className="scene" />;
+  if (account === 'out') return <SignIn />;
 
   return (
     <div onContextMenu={(e) => e.preventDefault()} style={{ height: '100%' }}>

@@ -1,7 +1,7 @@
 {
   "name": "flowercorn-abc",
   "private": true,
-  "version": "0.10.0",
+  "version": "0.11.0",
   "type": "module",
   "scripts": {
     "emoji": "node scripts/gen-emoji.mjs",
@@ -11,7 +11,8 @@
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:do": "node scripts/fetch-model.mjs public/models || echo \"Backup voice not downloaded; the game still works\"; npm run build"
   },
   "dependencies": {
     "@fontsource/andika": "^5.1.0",
@@ -42,5 +43,8 @@
     "vite": "^5.4.10",
     "vite-plugin-pwa": "^0.21.1",
     "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }
