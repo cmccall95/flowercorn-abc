@@ -1,6 +1,6 @@
 # Letter-name clips
 
-Checked with a phoneme recognizer (wav2vec2 espeak phonemes): 37 of 54 sound like their letter (at most one phoneme off, nothing extra at the start).
+Checked with a phoneme recognizer (wav2vec2 espeak phonemes): 35 of 54 sound like their letter (at most one phoneme off, nothing extra at the start).
 
 Spanish recordings by Jynus, Wikimedia Commons (CC0). Others made with Kokoro-82M (Apache-2.0), said twice with the first copy cut off.
 
@@ -15,13 +15,13 @@ Spanish recordings by Jynus, Wikimedia Commons (CC0). Others made with Kokoro-82
 | en | G | Kokoro, “/ʤˈi. ʤˈi./”, second copy (phonemes) | dʒ ai5 | ✅ |
 | en | H | Kokoro, “/ˈAʧ. ˈAʧ./”, second copy (phonemes) | eɪ d z | ⚠️ 2 phonemes off |
 | en | I | Kokoro, “/ˈI. ˈI./”, second copy (phonemes) | aɪ | ✅ |
-| en | J | Kokoro, “Jay. Jay.”, second copy (spelled) | dʒ ai5 | ✅ |
+| en | J | Kokoro, “/ʤˈA. ʤˈA./”, second copy (phonemes) | ts. ai5 | ⚠️ 2 phonemes off |
 | en | K | Kokoro, “/kˈA. kˈA./”, second copy (phonemes) | k e | ✅ |
 | en | L | Kokoro, “/ˈɛl. ˈɛl./”, second copy (phonemes) | ɛ l | ✅ |
 | en | M | Kokoro, “/ˈɛm. ˈɛm./”, second copy (phonemes) | ɛ m | ✅ |
 | en | N | Kokoro, “/ˈɛn. ˈɛn./”, second copy (phonemes) | ɛ n d | ✅ |
 | en | O | Kokoro, “/ˈO. ˈO./”, second copy (phonemes) | aʊ | ✅ |
-| en | P | Kokoro, “/pˈi. pˈi./”, second copy (phonemes) | p i5 | ✅ |
+| en | P | Kokoro, “/pˈi. pˈi./”, second copy (phonemes) | p ph i5 | ⚠️ 2 phonemes off |
 | en | Q | Kokoro, “/kjˈu. kjˈu./”, second copy (phonemes) | k i | ⚠️ 2 phonemes off |
 | en | R | Kokoro, “/ˈɑɹ. ˈɑɹ./”, second copy (phonemes) | ɑ | ✅ |
 | en | S | Kokoro, “/ˈɛs. ˈɛs./”, no clean split, whole clip (phonemes) | l a s a s | ⚠️ extra sound at the start |
