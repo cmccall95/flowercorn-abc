@@ -1,6 +1,6 @@
 # In-app voice check
 
-Voice loaded in 7s on the build machine; 54 lines took 3.20s each on average (max 4.51s).
+Voice loaded in 7s on the build machine; 54 lines took 3.19s each on average (max 5.05s).
 
 Letter names said twice, second copy kept, checked with a phoneme recognizer: en 16 of 27, es 1 of 27 sound right.
 
